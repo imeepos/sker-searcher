@@ -14,8 +14,9 @@ export class SkerAxios<D, T> {
         this._axios = axios.create()
     }
 
-    async request(config: AxiosRequestConfig<D>): Promise<T> {
+    async request(config: AxiosRequestConfig<Partial<D>> = {}): Promise<T> {
         const mergedConfig = this.mergeConfig(this._config, config)
+        console.log(mergedConfig.data)
         return this._axios.request(mergedConfig).then(res => res.data)
     }
 
@@ -30,7 +31,7 @@ export class SkerAxios<D, T> {
 
             if (Array.isArray(currentVal)) {
                 // 数组处理：拼接新数组
-                result[key] = Array.isArray(prevVal) 
+                result[key] = Array.isArray(prevVal)
                     ? [...prevVal, ...currentVal]
                     : currentVal
             } else if (this.isPlainObject(currentVal)) {
@@ -48,8 +49,8 @@ export class SkerAxios<D, T> {
     }
 
     private isPlainObject(value: any): value is Record<string, any> {
-        return typeof value === 'object' 
-            && value !== null 
+        return typeof value === 'object'
+            && value !== null
             && !Array.isArray(value)
     }
 
@@ -57,9 +58,9 @@ export class SkerAxios<D, T> {
         return this._cancel && this._cancel(msg)
     }
 
-    run(config: AxiosRequestConfig<D>): Observable<T> {
+    run(data: Partial<D>): Observable<T> {
         return new Observable<T>((sub) => {
-            this.request(config)
+            this.request({ data: data })
                 .then(data => {
                     sub.next(data)
                     sub.complete()

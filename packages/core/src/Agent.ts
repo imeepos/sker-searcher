@@ -4,12 +4,16 @@ import { TaskResult } from './types';
 
 export abstract class Agent<T = any> {
     private retries: number = 3;
+    private question: string = ``;
     constructor(
         public readonly id: string
     ) { }
-    abstract run(): Observable<TaskResult<T>>;
+    setQuestion(q: string) {
+        this.question = q;
+    }
+    abstract run(question: string): Observable<T>;
     execute(): Observable<TaskResult> {
-        return defer(() => this.run())
+        return defer(() => this.run(this.question))
             .pipe(
                 retry(this.retries),
                 catchError(error => of({
@@ -18,9 +22,7 @@ export abstract class Agent<T = any> {
                     error: error instanceof Error ? error : new Error(String(error))
                 })),
                 tap(result => {
-                    if (!result.success) {
-                        console.error(`Agent ${this.id} failed after ${this.retries} retries`);
-                    }
+                    console.log(result)
                 }),
                 mergeMap(data => of({
                     agentId: this.id,

@@ -27,7 +27,9 @@ export class ManagerAgent extends Agent<AgentResponse> {
                 version = m.create(AiAgentVersion, {
                     agent_id: agent.id,
                     version: 0,
-                    prompts: []
+                    prompts: [
+                        { role: 'system', content: `你是${this.name},${this.desc}` }
+                    ]
                 })
                 const { id } = await m.save(AiAgentVersion, version)
                 version.id = id;

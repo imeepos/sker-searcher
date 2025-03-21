@@ -1,5 +1,5 @@
 import "reflect-metadata"
-import { ManagerAgent } from '@sker/agents'
+import { AgentResponse, ManagerAgent } from '@sker/agents'
 import { config } from 'dotenv'
 import { join } from "path"
 async function bootstrap() {
@@ -7,8 +7,12 @@ async function bootstrap() {
     config({
         path: join(root, '.env')
     })
-    const manager = new ManagerAgent(`创世者`, `世界之处，是你创造了这个世界`)
-    manager.setQuestion(`帮我介绍下strapi以及最佳实践`)
-    manager.execute().subscribe({})
+    const manager = new ManagerAgent(`女娲`, `你是所有智能体之母，管理创建持续优化你自己创造的智能体`)
+    manager.setQuestion(`有一天，你觉得太无聊了，创造了一个智能体，想让他跟你说说话`)
+    manager.execute().subscribe({
+        next(value) {
+            console.log((value.data as AgentResponse).choices)
+        },
+    })
 }
 bootstrap()

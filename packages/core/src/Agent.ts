@@ -1,34 +1,35 @@
 import { defer, Observable, of } from 'rxjs';
 import { catchError, mergeMap, retry, tap } from 'rxjs/operators';
-import { TaskResult } from './types';
+import { isTaskResult, TaskResult } from './types';
 
 export abstract class Agent<T = any> {
     private retries: number = 3;
     private question: string = ``;
     constructor(
-        public readonly id: string
+        public readonly name: string,
+        public readonly desc: string
     ) { }
     setQuestion(q: string) {
         this.question = q;
     }
     abstract run(question: string): Observable<T>;
-    execute(): Observable<TaskResult> {
+    execute(): Observable<TaskResult<T>> {
         return defer(() => this.run(this.question))
             .pipe(
                 retry(this.retries),
                 catchError(error => of({
-                    agentId: this.id,
+                    agent: this.name,
                     success: false,
-                    error: error instanceof Error ? error : new Error(String(error))
+                    data: error instanceof Error ? error : new Error(String(error))
                 })),
-                tap(result => {
-                    console.log(result)
-                }),
-                mergeMap(data => of({
-                    agentId: this.id,
-                    success: true,
-                    data
-                }))
+                mergeMap(data => {
+                    if (isTaskResult(data)) return of(data)
+                    return of({
+                        agent: this.name,
+                        success: true,
+                        data: data
+                    })
+                })
             )
     }
 }

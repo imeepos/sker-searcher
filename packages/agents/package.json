@@ -1,0 +1,17 @@
+{
+  "name": "@sker/agents",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "tsc": "tsc"
+  },
+  "dependencies": {
+    "@sker/core": "workspace:*",
+    "@sker/orm": "workspace:*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

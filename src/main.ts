@@ -1,18 +1,14 @@
-import { SiliconflowChatCompletions } from '@sker/core'
+import "reflect-metadata"
+import { ManagerAgent } from '@sker/agents'
+import { config } from 'dotenv'
+import { join } from "path"
 async function bootstrap() {
-    console.log(`hello sker searcher`)
-    const tser = new TypescriptAgent
-    const chatCompletions = new SiliconflowChatCompletions({
-        model: 'Pro/deepseek-ai/DeepSeek-R1',
-        messages: [{
-            role: 'user',
-            content: `介绍下你自己`
-        }]
+    const root = process.cwd()
+    config({
+        path: join(root, '.env')
     })
-    chatCompletions.run().subscribe({
-        next(value) {
-            console.log(JSON.stringify(value, null, 2))
-        },
-    })
+    const manager = new ManagerAgent(`创世者`, `世界之处，是你创造了这个世界`)
+    manager.setQuestion(`帮我介绍下strapi以及最佳实践`)
+    manager.execute().subscribe({})
 }
 bootstrap()

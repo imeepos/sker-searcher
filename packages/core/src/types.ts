@@ -1,7 +1,10 @@
 
 export type TaskResult<T = any> = {
-    agentId: string;
+    agent: string;
     success: boolean;
-    data?: T;
-    error?: Error;
+    data: T | Error;
 };
+
+export function isTaskResult<T>(val: any): val is TaskResult<T> {
+    return Reflect.has(val, 'agent') && Reflect.has(val, 'success') && Reflect.has(val, 'data')
+}

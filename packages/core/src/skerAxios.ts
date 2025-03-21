@@ -14,15 +14,17 @@ export class SkerAxios<D, T> {
         this._axios = axios.create()
     }
 
+    public getConfig() {
+        return this._config
+    }
+
     async request(config: AxiosRequestConfig<Partial<D>> = {}): Promise<T> {
-        const mergedConfig = this.mergeConfig(this._config, config)
-        console.log(mergedConfig.data)
-        return this._axios.request(mergedConfig).then(res => res.data)
+        this._config = this.mergeConfig(this._config, config)
+        return this._axios.request(this._config).then(res => res.data)
     }
 
     private mergeConfig(prev: any, current: any): any {
         const result = { ...prev }
-
         for (const key of Object.keys(current)) {
             const currentVal = current[key]
             if (currentVal === undefined) continue // 忽略 undefined 值

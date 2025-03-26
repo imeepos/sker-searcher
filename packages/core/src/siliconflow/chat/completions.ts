@@ -2,6 +2,7 @@ import { Siliconflow } from "../siliconflow";
 export interface Message {
     role: "system" | "user" | "assistant";
     content: string;
+    reasoning_content?: string;
     name?: string;
 }
 
@@ -38,6 +39,27 @@ type MODEL =
     | `Pro/Qwen/Qwen2-1.5B-Instruct`
     | `Pro/THUDM/chatglm3-6b`
     | `Pro/THUDM/glm-4-9b-chat`;
+export interface SiliconflowChatCompletionsTool {
+    type: 'function';
+    function: {
+        strict: boolean;
+        name: string;
+        description: string;
+        parameters: any;
+    }
+}
+export type SiliconflowChatCompletionsTools = SiliconflowChatCompletionsTool[]
+
+export interface ResponseFormatJsonObject {
+    type: 'json_object'
+}
+export interface ResponseFormatText {
+    type: 'text'
+}
+export interface ResponseFormatJsonSchema {
+    type: 'json_schema';
+    json_schema: any;
+}
 export interface SiliconflowChatCompletionsRequest {
     model: MODEL;             // 必须的模型名称，如"kimi"
     messages: Message[];       // 必须的消息数组
@@ -46,8 +68,10 @@ export interface SiliconflowChatCompletionsRequest {
     top_p?: number;            // 核心采样概率 (0～1)
     max_tokens?: number;       // 最大返回token数
     stop?: string | string[];  // 停止序列
-    presence_penalty?: number; // 存在惩罚 (-2.0～2.0)
     frequency_penalty?: number;// 频率惩罚 (-2.0～2.0)
+    n?: number;
+    response_format?: ResponseFormatJsonObject | ResponseFormatText | ResponseFormatJsonSchema;
+    tools?: SiliconflowChatCompletionsTools
 }
 
 interface CompletionChoice {

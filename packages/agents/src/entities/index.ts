@@ -1,4 +1,102 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from '@sker/orm'
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from '@sker/orm'
+
+@Entity({
+    name: 'ai_package_name'
+})
+export class AiPackageName {
+    @PrimaryGeneratedColumn({
+        primaryKeyConstraintName: 'pk_ai_package_name_id'
+    })
+    id: number;
+
+    @Column({
+        type: 'varchar',
+        comment: '包名',
+        default: ``,
+        unique: true
+    })
+    name: string;
+
+    @Column({
+        type: 'varchar',
+        comment: '包简介',
+        default: ``,
+        unique: true
+    })
+    desc: string;
+
+    @Column({
+        type: 'text',
+        default: ''
+    })
+    docs: string;
+}
+
+
+@Entity({
+    name: 'ai_code'
+})
+@Unique('uk_package_id_name', ['package_id', 'name'])
+export class AiCode {
+    @PrimaryGeneratedColumn({
+        primaryKeyConstraintName: 'pk_ai_code_id'
+    })
+    id: number;
+
+    @Column({
+        type: 'varchar',
+        length: 255
+    })
+    name: string;
+
+    @Column({
+        default: '',
+        type: 'text'
+    })
+    docs: string;
+
+    @Column({
+        type: 'text',
+        default: ''
+    })
+    code: string;
+
+    @Column({
+        type: 'smallint',
+        comment: '函数状态是否通过测试',
+        default: 0
+    })
+    status: number;
+
+    @Column({
+        type: 'varchar',
+        comment: 'md5',
+        default: ``,
+        unique: true
+    })
+    hash: string;
+
+    @Column({
+        type: 'int',
+        comment: '所属包',
+        default: 0
+    })
+    package_id: number;
+
+    @Column({
+        type: 'int',
+        comment: '智能体',
+        default: 0
+    })
+    agent_id: number;
+
+    @Column({
+        type: 'int',
+        comment: '版本号',
+        default: 0
+    })
+    version_id: number;
+}
 
 @Entity({
     name: 'ai_agent'
@@ -62,6 +160,13 @@ export class AiAgentVersion {
     version: number;
 
     @Column({
+        type: 'varchar',
+        default: '',
+        length: 255
+    })
+    md5: string;
+
+    @Column({
         type: 'text',
         nullable: true,
         transformer: {
@@ -73,7 +178,7 @@ export class AiAgentVersion {
                 }
             },
             to: (val: any) => {
-                return Buffer.from(JSON.stringify(val), 'utf8').toString('base64')
+                return Buffer.from(JSON.stringify(val || []), 'utf8').toString('base64')
             }
         }
     })
@@ -101,7 +206,7 @@ export class AiAgentError {
                 }
             },
             to: (val: any) => {
-                return Buffer.from(JSON.stringify(val), 'utf8').toString('base64')
+                return Buffer.from(JSON.stringify(val || []), 'utf8').toString('base64')
             }
         }
     })
@@ -119,7 +224,7 @@ export class AiAgentError {
                 }
             },
             to: (val: any) => {
-                return Buffer.from(JSON.stringify(val), 'utf8').toString('base64')
+                return Buffer.from(JSON.stringify(val || []), 'utf8').toString('base64')
             }
         }
     })
@@ -162,7 +267,7 @@ export class AiAgentLog {
                 }
             },
             to: (val: any) => {
-                return Buffer.from(JSON.stringify(val), 'utf8').toString('base64')
+                return Buffer.from(JSON.stringify(val || []), 'utf8').toString('base64')
             }
         }
     })
@@ -180,7 +285,7 @@ export class AiAgentLog {
                 }
             },
             to: (val: any) => {
-                return Buffer.from(JSON.stringify(val), 'utf8').toString('base64')
+                return Buffer.from(JSON.stringify(val || []), 'utf8').toString('base64')
             }
         }
     })

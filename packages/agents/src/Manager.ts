@@ -1,91 +1,69 @@
-import { Agent, from, isTaskResult, map, Observable, SiliconflowChatCompletions, SiliconflowChatCompletionsResponse, switchMap, TaskResult } from "@sker/core";
+import { from, Message, Observable, switchMap, TaskResult } from "@sker/core";
+import { AgentResponse, BaseAgent } from "./BaseAgent";
 import { useEntityManager } from "@sker/orm";
-import { AiAgent, AiAgentError, AiAgentLog, AiAgentVersion } from "./entities";
-export type AgentResponse = SiliconflowChatCompletionsResponse & {
-    agent_id: number;
-    version_id: number;
-}
-export class ManagerAgent extends Agent<AgentResponse> {
-    private chatCompletions: SiliconflowChatCompletions;
-    constructor(name: string, desc: string) {
-        super(name, desc)
+import { AiAgent, AiAgentVersion } from "./entities";
+import { z } from 'zod'
+import { zodToJsonSchema } from 'zod-to-json-schema'
+import { createHash } from "crypto";
+export const ManagerAgentParams = z.object({
+    role: z.optional(z.enum(['system', 'assistant', 'user'], { description: '角色' })),
+    content: z.object({
+        name: z.optional(z.string({ description: '角色的全名或昵称' })),
+        gender: z.optional(z.enum(['男', '女'], { description: '角色的性别' })),
+        age: z.optional(z.string({ description: '年龄' })),
+        desc: z.optional(z.string({ description: '任务简介' })),
+        content: z.optional(z.string({ description: '技能提示词，以第三人称描述' }))
+    })
+})
+export const ManagerAgentSchema = zodToJsonSchema(ManagerAgentParams)
+export class ManagerAgent extends BaseAgent {
+    constructor(name: string, desc: string, prompts: Message[] = []) {
+        super(name, desc, prompts)
     }
-    run(question: string): Observable<AgentResponse> {
-        return from(useEntityManager([AiAgent, AiAgentVersion], async m => {
-            let agent = await m.findOne(AiAgent, { where: { name: this.name } })
-            if (!agent) {
-                agent = m.create(AiAgent, {
-                    name: this.name,
-                    desc: this.desc,
-                    parent_id: 0
-                });
-                const { id } = await m.save(AiAgent, agent)
-                agent.id = id;
-            }
-            let version = await m.findOne(AiAgentVersion, { where: { agent_id: agent.id }, order: { version: 'desc' } })
-            if (!version) {
-                version = m.create(AiAgentVersion, {
-                    agent_id: agent.id,
-                    version: 0,
-                    prompts: [
-                        { role: 'system', content: `你是${this.name},${this.desc}` }
-                    ]
-                })
-                const { id } = await m.save(AiAgentVersion, version)
-                version.id = id;
-            }
-            return version;
-        })).pipe(
-            switchMap(it => {
-                this.chatCompletions = new SiliconflowChatCompletions({
-                    model: 'Pro/deepseek-ai/DeepSeek-R1',
-                    messages: it?.prompts || [],
-                    temperature: 0,
-                })
-                return this.chatCompletions.run({
-                    messages: [
-                        { role: 'user', content: question }
-                    ]
-                }).pipe(
-                    map(msg => {
-                        return {
-                            ...msg,
-                            agent_id: it.agent_id,
-                            version_id: it.id
-                        }
-                    })
-                )
-            })
-        )
-    }
-
     execute(): Observable<TaskResult<AgentResponse>> {
         return super.execute().pipe(
-            switchMap(t => {
-                return from(useEntityManager([AiAgent, AiAgentVersion, AiAgentLog, AiAgentError], async m => {
-                    const data = t.data;
-                    if (data instanceof Error) {
-                        // 错误
-                        const log = m.create(AiAgentError, {
-                            prompts: this.chatCompletions.getConfig().data?.messages || [],
-                            errors: [{
-                                message: data.message,
-                                stack: data.stack,
-                                name: data.name
-                            }]
+            switchMap((value) => {
+                const run = async () => {
+                    const data = value.data as AgentResponse
+                    const results = data.choices.map(d => {
+                        try {
+                            return JSON.parse(d.message.reasoning_content || '')
+                        } catch (e) {
+                            return {}
+                        }
+                    })
+                    if (Array.isArray(results)) {
+                        await useEntityManager([AiAgent, AiAgentVersion], async m => {
+                            await Promise.all(results.flat().map(async it => {
+                                console.log(it)
+                                const agent = ManagerAgentParams.parse(it)
+                                const aiAgent = m.create(AiAgent, {
+                                    name: agent.content.name,
+                                    desc: agent.content.desc,
+                                    parent_id: this.agentId
+                                })
+                                const { id } = await m.save(AiAgent, aiAgent)
+                                aiAgent.id = id;
+                                const prompts = [
+                                    {
+                                        role: `system`,
+                                        content: `你叫${agent.content.name},性别${agent.content.gender},年龄${agent.content.age},${agent.content.content}`
+                                    }
+                                ]
+                                const md5 = createHash('md5').update(JSON.stringify(prompts)).digest('hex')
+                                const aiAgentVersion = m.create(AiAgentVersion, {
+                                    agent_id: aiAgent.id,
+                                    version: 0,
+                                    prompts: prompts,
+                                    md5: md5
+                                })
+                                await m.save(AiAgentVersion, aiAgentVersion)
+                            }))
                         })
-                        await m.save(AiAgentLog, log)
-                    } else {
-                        const log = m.create(AiAgentLog, {
-                            agent_id: data.agent_id,
-                            version_id: data.version_id,
-                            prompts: this.chatCompletions.getConfig().data?.messages || [],
-                            answer: data.choices
-                        })
-                        await m.save(AiAgentLog, log)
                     }
-                    return t;
-                }))
+                    return value;
+                }
+                return from(run())
             })
         )
     }

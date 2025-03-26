@@ -1,20 +1,19 @@
 import { defer, Observable, of } from 'rxjs';
 import { catchError, mergeMap, retry, tap } from 'rxjs/operators';
 import { isTaskResult, TaskResult } from './types';
+import { Message } from './siliconflow';
 
 export abstract class Agent<T = any> {
     private retries: number = 3;
-    private question: string = ``;
+    public question: string = ``;
     constructor(
         public readonly name: string,
-        public readonly desc: string
+        public readonly desc: string,
+        public readonly prompts: Message[]
     ) { }
-    setQuestion(q: string) {
-        this.question = q;
-    }
-    abstract run(question: string): Observable<T>;
+    abstract run(): Observable<T>;
     execute(): Observable<TaskResult<T>> {
-        return defer(() => this.run(this.question))
+        return defer(() => this.run())
             .pipe(
                 retry(this.retries),
                 catchError(error => of({

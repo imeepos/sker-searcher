@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node -r tsconfig-paths/register src/main.ts"
+    "start": "ts-node -r tsconfig-paths/register src/main.ts",
+    "test": "ts-node -r tsconfig-paths/register src/typescripter.ts"
   },
   "keywords": [],
   "author": "",
@@ -13,11 +14,16 @@
     "@sker/agents": "workspace:*",
     "@sker/core": "workspace:*",
     "@sker/orm": "workspace:*",
+    "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.13.10",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
+    "fs-extra": "^11.3.0",
     "pg": "^8.14.1",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0"
+    "tsconfig-paths": "^4.2.0",
+    "zod": "^3.24.2",
+    "zod-to-json-schema": "^3.24.5"
   }
 }

@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "@sker/core": "workspace:*",
-    "@sker/orm": "workspace:*"
+    "@sker/orm": "workspace:*",
+    "@sker/tools": "workspace:*"
   },
   "keywords": [],
   "author": "",

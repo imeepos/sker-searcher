@@ -59,6 +59,9 @@ importers:
       '@sker/orm':
         specifier: workspace:*
         version: link:../orm
+      '@sker/tools':
+        specifier: workspace:*
+        version: link:../tools
 
   packages/core:
     dependencies:

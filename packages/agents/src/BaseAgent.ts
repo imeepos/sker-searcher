@@ -2,6 +2,8 @@ import { Agent, from, map, Message, Observable, SiliconflowChatCompletions, Sili
 import { useEntityManager } from "@sker/orm";
 import { AiAgent, AiAgentError, AiAgentLog, AiAgentVersion } from "./entities";
 import { createHash } from "crypto";
+import { useTools } from '@sker/tools';
+
 export type AgentResponse = SiliconflowChatCompletionsResponse & {
     agent_id: number;
     version_id: number;
@@ -73,18 +75,22 @@ export class BaseAgent extends Agent<AgentResponse> {
             this.agentId = agent.id;
             let version = await m.findOneOrFail(AiAgentVersion, { where: { agent_id: agent.id }, order: { version: 'desc' } })
             this.versionId = version.id;
-            return version;
+            const tools = await useTools()
+            return { version, tools };
         })).pipe(
-            switchMap(it => {
+            switchMap(({ version, tools }) => {
                 this.chatCompletions = new SiliconflowChatCompletions({
                     model: 'Pro/deepseek-ai/DeepSeek-R1',
-                    messages: it?.prompts || [],
+                    messages: version?.prompts || [],
                     temperature: 0,
                     max_tokens: 16384,
                     n: 1,
                     response_format: {
                         type: 'json_object'
-                    }
+                    },
+                    tools: [
+                        ...tools
+                    ]
                 })
                 return this.chatCompletions.run({
                     messages: [
@@ -94,8 +100,8 @@ export class BaseAgent extends Agent<AgentResponse> {
                     map(msg => {
                         return {
                             ...msg,
-                            agent_id: it.agent_id,
-                            version_id: it.id
+                            agent_id: version.agent_id,
+                            version_id: version.id
                         }
                     })
                 )

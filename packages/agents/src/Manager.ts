@@ -8,7 +8,7 @@ import { createHash } from "crypto";
 export const ManagerAgentParams = z.object({
     role: z.optional(z.enum(['system', 'assistant', 'user'], { description: '角色' })),
     content: z.object({
-        name: z.optional(z.string({ description: '角色的全名或昵称' })),
+        name: z.optional(z.string({ description: '角色的全名或昵称，命名逻辑：中文名体现专业气质（如"玄铁"象征后端坚固性），英文名突出职能（如CodeForge）；' })),
         gender: z.optional(z.enum(['男', '女'], { description: '角色的性别' })),
         age: z.optional(z.string({ description: '年龄' })),
         desc: z.optional(z.string({ description: '任务简介' })),
@@ -37,6 +37,7 @@ export class ManagerAgent extends BaseAgent {
                             await Promise.all(results.flat().map(async it => {
                                 console.log(it)
                                 const agent = ManagerAgentParams.parse(it)
+                                if (!agent.content.name) throw new Error(`name is null`)
                                 const aiAgent = m.create(AiAgent, {
                                     name: agent.content.name,
                                     desc: agent.content.desc,

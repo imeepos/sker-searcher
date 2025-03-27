@@ -1,5 +1,51 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from '@sker/orm'
 
+
+@Entity({
+    name: 'ai_role'
+})
+export class AiRole {
+    @PrimaryGeneratedColumn({
+        primaryKeyConstraintName: 'pk_ai_role_id'
+    })
+    id: number;
+
+    @Column({
+        type: 'varchar',
+        length: 255,
+        default: ''
+    })
+    name: string;
+}
+
+@Entity({
+    name: 'ai_project'
+})
+export class AiProject {
+    @PrimaryGeneratedColumn({
+        primaryKeyConstraintName: 'pk_ai_project_id'
+    })
+    id: number;
+
+    @Column({
+        type: 'varchar',
+        length: 255
+    })
+    name: string;
+
+    @Column({
+        type: 'text',
+        default: ''
+    })
+    desc: string;
+
+    @Column({
+        type: 'text',
+        default: ''
+    })
+    content: string;
+}
+
 @Entity({
     name: 'ai_package_name'
 })

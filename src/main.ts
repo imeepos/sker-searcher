@@ -16,7 +16,7 @@ async function bootstrap() {
         { role: 'system', content: `请以此json schema${JSON.stringify(ManagerAgentSchema)}格式回答用户问题，并将结果保存到content字段` },
     ])
     await manager.create([])
-    manager.question = (`创造一个精通Typescript的程序员，精通Typescript最佳实践`)
+    manager.question = (`创造一个软件架构师，负责将业务需求转化为可落地的技术解决方案，并确保系统的整体质量、可维护性、扩展性和性能`)
     await ensureDir(join(root, 'outputs'))
     manager.execute().subscribe()
 }

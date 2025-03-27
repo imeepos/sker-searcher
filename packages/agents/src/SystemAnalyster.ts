@@ -1,25 +1,30 @@
 import { from, Message, Observable, switchMap, TaskResult } from "@sker/core";
 import { AgentResponse, BaseAgent } from "./BaseAgent";
 import { useEntityManager } from "@sker/orm";
-import { AiAgent, AiAgentVersion, AiCode, AiPackageName } from "./entities";
+import { AiAgent, AiAgentVersion, AiProject } from "./entities";
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
-import { createHash } from "crypto";
-export const CoderAgentParams = z.object({
-    name: z.optional(z.string({ description: '函数名，函数名要简洁易记体现函数功能' })),
-    docs: z.string({ description: 'markdown格式的说明文档，要求简洁明了' }),
-    code: z.string({ description: '完整代码，如无必要，不增依赖' })
+export const SystemAnalysterAgentParams = z.object({
+    name: z.optional(z.string({ description: '项目名，要简洁易记能体现该项目的核心亮点功能' })),
+    content: z.string({ description: '架构文档，markdown格式，要求简洁明了' }),
+    desc: z.string({ description: '简单介绍，简洁明了的说明此项目的用途及场景' })
 })
-export const CoderAgentSchema = zodToJsonSchema(CoderAgentParams)
-export class CoderAgent extends BaseAgent {
+export const SystemAnalysterAgentSchema = zodToJsonSchema(SystemAnalysterAgentParams)
+export class SystemAnalysterAgent extends BaseAgent {
     constructor(name: string, desc: string, prompts: Message[] = []) {
         super(name, desc, prompts)
     }
     static async create(id: number) {
         return await useEntityManager([AiAgent, AiAgentVersion], async (m) => {
             const agent = await m.findOneOrFail(AiAgent, { where: { id: id } })
-            return new CoderAgent(agent.name, agent.desc, [])
+            return new SystemAnalysterAgent(agent.name, agent.desc, [])
         })
+    }
+    async create(prompts: Message[]): Promise<void> {
+        return super.create([
+            { role: 'system', content: `根据用户的需求，设计可靠、灵活的系统架构，确保软件在满足当前需求的同时，具备应对未来变化的生命力` },
+            ...prompts
+        ])
     }
     execute(): Observable<TaskResult<AgentResponse>> {
         return super.execute().pipe(
@@ -34,20 +39,17 @@ export class CoderAgent extends BaseAgent {
                         }
                     })
                     if (Array.isArray(results)) {
-                        await useEntityManager([AiPackageName, AiCode], async m => {
+                        await useEntityManager([AiProject], async m => {
                             await Promise.all(results.flat().map(async it => {
-                                const agent = CoderAgentParams.parse(it)
-                                // 保存代码
-                                const md5 = createHash('md5').update(agent.code).digest('hex')
-                                const one = await m.findOne(AiCode, { where: { hash: md5 } })
+                                const agent = SystemAnalysterAgentParams.parse(it)
+                                const one = await m.findOne(AiProject, { where: { name: agent.name } })
                                 if (!one) {
-                                    const code = m.create(AiCode, {
+                                    const code = m.create(AiProject, {
                                         name: agent.name,
-                                        docs: agent.docs,
-                                        code: agent.code,
-                                        hash: md5
+                                        desc: agent.desc,
+                                        content: agent.content,
                                     })
-                                    await m.save(AiCode, code)
+                                    await m.save(AiProject, code)
                                 }
                             }))
                         })

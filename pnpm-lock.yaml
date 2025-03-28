@@ -84,11 +84,22 @@ importers:
         specifier: ^0.3.21
         version: 0.3.21(pg@8.14.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@types/node@22.13.10)(typescript@5.8.2))
 
+  packages/sandbox: {}
+
   packages/tools:
     dependencies:
+      '@sker/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sker/orm':
+        specifier: workspace:*
+        version: link:../orm
+      '@sker/sandbox':
+        specifier: workspace:*
+        version: link:../sandbox
       '@sker/tools':
         specifier: 'file:'
-        version: 'link:'
+        version: file:packages/tools
 
 packages:
 
@@ -124,6 +135,9 @@ packages:
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
+
+  '@sker/tools@file:packages/tools':
+    resolution: {directory: packages/tools, type: directory}
 
   '@sqltools/formatter@1.2.5':
     resolution: {integrity: sha512-Uy0+khmZqUrUGm5dmMqVlnvufZRSK0FbYzVgp0UMstm+F5+W2/jnEEQyc9vo1ZR/E5ZI/B1WjjoTqBqwJL6Krw==}
@@ -1089,6 +1103,12 @@ snapshots:
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
+
+  '@sker/tools@file:packages/tools':
+    dependencies:
+      '@sker/core': link:packages/core
+      '@sker/orm': link:packages/orm
+      '@sker/sandbox': link:packages/sandbox
 
   '@sqltools/formatter@1.2.5': {}
 

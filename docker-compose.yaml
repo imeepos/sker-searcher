@@ -1,4 +1,50 @@
 services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: baihu_n8n
+    ports:
+      - ${N8N_PORT}:5678
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_PROTOCOL=http
+      - N8N_PORT=5678
+      - N8N_SECURE_COOKIE=false
+    networks:
+      - postgres_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n2.rule=Host(`n8n.${HOST_NAME}`)"
+      - "traefik.http.services.n8n2.loadbalancer.server.port=5678"
+  traefik:
+    image: traefik:v3.0
+    container_name: baihu_traefik
+    ports:
+      - "${TRAEFIK_PORT}:80"
+      - "${TRAEFIK_SSL_PORT}:443"
+      - 8080:8080
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - postgres_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${HOST_NAME}`)"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    restart: unless-stopped
+    depends_on:
+      - minio
+      - mongodb
+      - rabbitmq
+      - redis
+      - postgres
   minio:
     image: minio/minio:latest
     container_name: baihu_minio
@@ -22,7 +68,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.minio.rule=Host(`minio.${HOST_NAME}`)"
-      - "traefik.http.services.minio.loadbalancer.server.port=9001"
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
   mongodb:
     image: mongo:latest
     container_name: baihu_mongodb
@@ -41,6 +87,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mongodb.rule=Host(`mongodb.${HOST_NAME}`)"
+      - "traefik.http.services.mongodb.loadbalancer.server.port=27017"
   rabbitmq:
     image: rabbitmq:3-management
     container_name: baihu_rabbitmq
@@ -79,6 +129,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.redis.rule=Host(`redis.${HOST_NAME}`)"
+      - "traefik.http.services.redis.loadbalancer.server.port=6379"
   postgres:
     image: postgres:16
     container_name: baihu_postgres
@@ -98,9 +152,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.postgres.rule=Host(`postgres.${HOST_NAME}`)"
+      - "traefik.http.services.postgres.loadbalancer.server.port=5432"
 networks:
   postgres_network:
     driver: bridge
 volumes:
   postgres_data:
+    driver: local
+  minio_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  redis_data:
+    driver: local
+  n8n_data:
     driver: local

@@ -1,4 +1,20 @@
 services:
+  portainer:
+    image: portainer/portainer-ce:latest # 社区版（推荐）
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - "${PORTAINER_WEB_PORT}:9000" # Web 管理界面端口
+      - "${PORTAINER_AGENT_PORT}:8000" # 用于 Edge Agent 通信（可选）
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # 允许 Portainer 管理本地 Docker
+      - portainer_data:/data # 持久化存储配置数据
+    networks:
+      - postgres_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.${HOST_NAME}`)"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
   n8n:
     image: docker.n8n.io/n8nio/n8n
     container_name: baihu_n8n
@@ -171,4 +187,6 @@ volumes:
   redis_data:
     driver: local
   n8n_data:
+    driver: local
+  portainer_data:
     driver: local

@@ -78,7 +78,7 @@ export class BaseAgent extends Agent<AgentResponse> {
             const tools = await useTools()
             return { version, tools };
         })).pipe(
-            switchMap(({ version, tools }) => {
+            switchMap(({ version }) => {
                 this.chatCompletions = new SiliconflowChatCompletions({
                     model: 'Pro/deepseek-ai/DeepSeek-R1',
                     messages: version?.prompts || [],
@@ -87,10 +87,7 @@ export class BaseAgent extends Agent<AgentResponse> {
                     n: 1,
                     response_format: {
                         type: 'json_object'
-                    },
-                    tools: [
-                        ...tools
-                    ]
+                    }
                 })
                 return this.chatCompletions.run({
                     messages: [

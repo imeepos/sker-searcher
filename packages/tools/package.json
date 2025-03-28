@@ -11,6 +11,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@sker/tools": "file:"
+    "@sker/tools": "file:",
+    "@sker/core": "workspace:*",
+    "@sker/orm": "workspace:*",
+    "@sker/sandbox": "workspace:*"
   }
 }

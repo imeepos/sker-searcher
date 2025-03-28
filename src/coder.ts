@@ -14,7 +14,7 @@ async function bootstrap() {
     await agent.create([
         { role: 'system', content: `请以此json schema${JSON.stringify(CoderAgentSchema)}格式回答用户问题，并将结果保存到content字段` }
     ])
-    agent.question = (`帮我编写合并多个视频成单个视频的函数`)
+    agent.question = (`编写一个函数，将语音转化为文字`)
     await ensureDir(join(root, 'outputs'))
     agent.execute().subscribe({
         next(val) {

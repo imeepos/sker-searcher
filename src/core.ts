@@ -9,8 +9,11 @@ async function bootstrap() {
         path: join(root, '.env')
     })
     const manager = new CoreAgent()
-    await manager.create([])
-    manager.question = (`从ai_agent表中查出所有的数据`)
+    await manager.create([
+        { role: 'system', content: `将用户需求转化为javascript代码实现` },
+        { role: 'system', content: `如果需要调用工具，请按照{name: string, parameters: any[]}格式输出到content` },
+    ])
+    manager.question = (`将语音转化为文字`)
     await ensureDir(join(root, 'outputs'))
     manager.answer().subscribe({
         next(value) {

@@ -2,8 +2,8 @@
 import { SiliconflowChatCompletionsTool } from '@sker/core'
 import { useQuery as _useQuery } from '@sker/orm'
 import { useSandbox } from '@sker/sandbox'
-const useQuery = async (sql: string, parameters: any[]) => {
-    return _useQuery([], sql, parameters)
+const useQuery = async <T>(sql: string, parameters: any[]) => {
+    return _useQuery<T>([], sql, parameters)
 }
 export async function useTools(): Promise<SiliconflowChatCompletionsTool[]> {
     return [
@@ -12,13 +12,17 @@ export async function useTools(): Promise<SiliconflowChatCompletionsTool[]> {
             function: {
                 strict: false,
                 name: 'useSandbox',
-                description: `Execute a javascript code with parameters`,
+                description: `Execute a javascript code with parameters in vm sandbox, 不需要return,如：code: x+y, context: {x: 1, y: 2}`,
                 parameters: {
                     type: "object",
                     properties: {
                         code: {
                             type: "string",
                             description: "The javascript code to execute"
+                        },
+                        context: {
+                            type: "object",
+                            description: "The context for the javascript code to run in vm sandbox"
                         }
                     },
                     required: ["code"]
@@ -53,16 +57,16 @@ export async function useTools(): Promise<SiliconflowChatCompletionsTool[]> {
     ]
 }
 
-export async function runTool(name: string, ...parameters: any[]) {
+export async function runTool<T = any>(name: string, ...parameters: any[]): Promise<T> {
     switch (name) {
         case "useQuery":
             const { sql, params } = parameters[0]
-            return await useQuery(sql, params)
+            return await useQuery<T>(sql, params)
         case "useSandbox":
-            const { code } = parameters[0]
-            return useSandbox(code)
+            const { code, context } = parameters[0]
+            return useSandbox(code, context) as T;
         default:
-            console.log({ name, parameters })
             throw new Error(`not found name: ${name}`)
     }
 }
+

@@ -105,6 +105,24 @@ export class BaseAgent extends Agent<AgentResponse> {
                         }
                     })
                 )
+            }),
+            switchMap(data => {
+                async function run() {
+                    const choices = await Promise.all(data.choices.map(async c => {
+                        const message = c.message
+                        try {
+                            const content = JSON.parse(message.content)
+                            message.content = await _runTool(content)
+                            c.message = message;
+                            return c;
+                        } catch (e) {
+                            return c;
+                        }
+                    }))
+                    data.choices = choices;
+                    return data;
+                }
+                return from(run())
             })
         )
     }
@@ -149,33 +167,15 @@ export class BaseAgent extends Agent<AgentResponse> {
                     return t;
                 }))
             }),
-            switchMap(t => {
-                async function run() {
-                    const data = t.data as AgentResponse;
-                    const choices = await Promise.all(data.choices.map(async c => {
-                        const message = c.message
-                        try {
-                            const content = JSON.parse(message.content)
-                            if (content.tool) {
-                                message.content = await runTool<any>(content.tool, content.params)
-                            } else if (content.function) {
-                                message.content = await runTool<any>(content.function, content.params)
-                            } else {
-                                console.log({ content })
-                            }
-                            c.message = message;
-                            return c;
-                        } catch (e) {
-                            console.error(e)
-                            return c;
-                        }
-                    }))
-                    data.choices = choices;
-                    t.data = data;
-                    return t;
-                }
-                return from(run())
-            })
+
         )
+    }
+}
+
+async function _runTool(content: any): Promise<any> {
+    if (Array.isArray(content)) {
+        return await Promise.all(content.map(c => _runTool(c)))
+    } else {
+        return runTool<any>(content.tool || content.name || content.function, content.params || content.parameters || content.arguments)
     }
 }

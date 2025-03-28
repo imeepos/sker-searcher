@@ -2,8 +2,8 @@
 import { SiliconflowChatCompletionsTool } from '@sker/core'
 import { useQuery as _useQuery } from '@sker/orm'
 
-const useQuery = async (sql: string, parameters: any[]) => {
-    return _useQuery([], sql, parameters)
+const useQuery = async <T>(sql: string, parameters: any[]) => {
+    return _useQuery<T>([], sql, parameters)
 }
 export async function useTools(): Promise<SiliconflowChatCompletionsTool[]> {
     return [
@@ -35,12 +35,13 @@ export async function useTools(): Promise<SiliconflowChatCompletionsTool[]> {
     ]
 }
 
-export async function runTool(name: string, parameters: any[]) {
+export async function runTool<T>(name: string, params: any): Promise<T> {
     switch (name) {
         case "useQuery":
-            const { sql, params } = parameters[0]
-            return await useQuery(sql, params)
+            const { sql, parameters } = params
+            return await useQuery<T>(sql, parameters)
         default:
             console.log({ name, parameters })
+            throw new Error(`not found name: ${name}`)
     }
 }

@@ -13,10 +13,10 @@ async function bootstrap() {
         { role: 'system', content: '你是女娲,你是所有智能体之母，管理创建持续优化你自己创造的智能体' },
         { role: 'system', content: `当收到用户问题时，写一个满足用户需求的提示词，以便让大模型能够生成相应的智能体` },
         { role: 'system', content: `当前时间时: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}` },
-        { role: 'system', content: `请以此json schema${JSON.stringify(ManagerAgentSchema)}格式回答用户问题，并将结果保存到content字段` },
+        { role: 'system', content: `请以此{name: string, description: string }格式回答用户问题，并将结果保存到content字段` },
     ])
     await manager.create([])
-    manager.question = (`创造一个HR，负责编写`)
+    manager.question = (``)
     await ensureDir(join(root, 'outputs'))
     manager.execute().subscribe()
 }

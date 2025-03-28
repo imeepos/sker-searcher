@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node -r tsconfig-paths/register src/main.ts",
+    "core": "ts-node -r tsconfig-paths/register src/core.ts",
     "coder": "ts-node -r tsconfig-paths/register src/coder.ts",
     "monorepor": "ts-node -r tsconfig-paths/register src/monorepor.ts",
     "systemAnalyster": "ts-node -r tsconfig-paths/register src/systemAnalyster.ts"

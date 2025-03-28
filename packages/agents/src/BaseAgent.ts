@@ -1,8 +1,8 @@
-import { Agent, from, map, Message, Observable, SiliconflowChatCompletions, SiliconflowChatCompletionsResponse, switchMap, TaskResult } from "@sker/core";
+import { Agent, from, map, Message, Observable, of, SiliconflowChatCompletions, SiliconflowChatCompletionsResponse, switchMap, TaskResult } from "@sker/core";
 import { useEntityManager } from "@sker/orm";
 import { AiAgent, AiAgentError, AiAgentLog, AiAgentVersion } from "./entities";
 import { createHash } from "crypto";
-import { useTools } from '@sker/tools';
+import { runTool, useTools } from '@sker/tools';
 
 export type AgentResponse = SiliconflowChatCompletionsResponse & {
     agent_id: number;
@@ -108,6 +108,16 @@ export class BaseAgent extends Agent<AgentResponse> {
             })
         )
     }
+
+    answer<T>(): Observable<T[]> {
+        return this.execute().pipe(
+            switchMap(value => {
+                const data = value.data as AgentResponse
+                const messages = data.choices.map(c => c.message.content)
+                return of(messages.flat() as T[])
+            })
+        )
+    }
     execute(): Observable<TaskResult<AgentResponse>> {
         return super.execute().pipe(
             switchMap(t => {
@@ -138,6 +148,33 @@ export class BaseAgent extends Agent<AgentResponse> {
                     }
                     return t;
                 }))
+            }),
+            switchMap(t => {
+                async function run() {
+                    const data = t.data as AgentResponse;
+                    const choices = await Promise.all(data.choices.map(async c => {
+                        const message = c.message
+                        try {
+                            const content = JSON.parse(message.content)
+                            if (content.tool) {
+                                message.content = await runTool<any>(content.tool, content.params)
+                            } else if (content.function) {
+                                message.content = await runTool<any>(content.function, content.params)
+                            } else {
+                                console.log({ content })
+                            }
+                            c.message = message;
+                            return c;
+                        } catch (e) {
+                            console.error(e)
+                            return c;
+                        }
+                    }))
+                    data.choices = choices;
+                    t.data = data;
+                    return t;
+                }
+                return from(run())
             })
         )
     }

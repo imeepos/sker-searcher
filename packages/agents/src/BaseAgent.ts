@@ -1,4 +1,4 @@
-import { Agent, from, map, Message, Observable, of, SiliconflowChatCompletions, SiliconflowChatCompletionsResponse, switchMap, TaskResult } from "@sker/core";
+import { Agent, from, map, Message, Observable, of, ResponseFormatJsonObject, ResponseFormatJsonSchema, ResponseFormatText, SiliconflowChatCompletions, SiliconflowChatCompletionsResponse, switchMap, TaskResult } from "@sker/core";
 import { useEntityManager } from "@sker/orm";
 import { AiAgent, AiAgentError, AiAgentLog, AiAgentVersion } from "./entities";
 import { createHash } from "crypto";
@@ -13,8 +13,10 @@ export class BaseAgent extends Agent<AgentResponse> {
     public agentId: number;
     public versionId: number;
     public logId: number;
-    constructor(name: string, desc: string, prompts: Message[] = []) {
+    public response_format: ResponseFormatJsonObject | ResponseFormatText | ResponseFormatJsonSchema
+    constructor(name: string, desc: string, prompts: Message[] = [], response_format: ResponseFormatJsonObject | ResponseFormatText | ResponseFormatJsonSchema = {type: 'text'}) {
         super(name, desc, prompts)
+        this.response_format = response_format
     }
     static async create(id: number) {
         return await useEntityManager([AiAgent, AiAgentVersion], async (m) => {
@@ -85,9 +87,7 @@ export class BaseAgent extends Agent<AgentResponse> {
                     temperature: 0,
                     max_tokens: 16384,
                     n: 1,
-                    response_format: {
-                        type: 'json_object'
-                    }
+                    response_format: this.response_format
                 })
                 return this.chatCompletions.run({
                     messages: [
@@ -106,6 +106,7 @@ export class BaseAgent extends Agent<AgentResponse> {
             switchMap(data => {
                 async function run() {
                     const choices = await Promise.all(data.choices.map(async c => {
+                        console.log(c)
                         const message = c.message
                         try {
                             const content = JSON.parse(message.content)

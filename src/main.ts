@@ -1,5 +1,5 @@
 import "reflect-metadata"
-import { ManagerAgent, ManagerAgentSchema } from '@sker/agents'
+import { ManagerAgent } from '@sker/agents'
 import { config } from 'dotenv'
 import { join } from "path"
 import { ensureDir } from 'fs-extra'

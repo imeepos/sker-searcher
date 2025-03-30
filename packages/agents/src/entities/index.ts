@@ -2,23 +2,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, Updat
 
 
 @Entity({
-    name: 'ai_role'
-})
-export class AiRole {
-    @PrimaryGeneratedColumn({
-        primaryKeyConstraintName: 'pk_ai_role_id'
-    })
-    id: number;
-
-    @Column({
-        type: 'varchar',
-        length: 255,
-        default: ''
-    })
-    name: string;
-}
-
-@Entity({
     name: 'ai_project'
 })
 export class AiProject {

@@ -8,7 +8,10 @@
     "core": "ts-node -r tsconfig-paths/register src/core.ts",
     "coder": "ts-node -r tsconfig-paths/register src/coder.ts",
     "monorepor": "ts-node -r tsconfig-paths/register src/monorepor.ts",
-    "systemAnalyster": "ts-node -r tsconfig-paths/register src/systemAnalyster.ts"
+    "systemAnalyster": "ts-node -r tsconfig-paths/register src/systemAnalyster.ts",
+    "tester": "ts-node -r tsconfig-paths/register src/tester.ts",
+    "runner": "ts-node -r tsconfig-paths/register src/runner.ts",
+    "docs": "ts-node -r tsconfig-paths/register src/docs.ts"
   },
   "keywords": [],
   "author": "",

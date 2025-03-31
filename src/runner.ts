@@ -14,7 +14,7 @@ async function bootstrap() {
         { role: 'system', content: `你是一个Deepseek模型的提示词模板生成助手` },
         { role: 'system', content: `请按照${JSON.stringify(GeneraterTemplateSchema)}格式，根据用户的需求生成提示词` },
     ])
-    manager.question = `生成一个擅长zod的技术专家`
+    manager.question = `帮我生成一个Git工作流助手的提示词`
     await ensureDir(join(root, 'outputs'))
     manager.answer().subscribe({
         next(value) {

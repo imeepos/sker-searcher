@@ -150,7 +150,7 @@ services:
       - "traefik.http.routers.redis.rule=Host(`redis.${HOST_NAME}`)"
       - "traefik.http.services.redis.loadbalancer.server.port=6379"
   postgres:
-    image: postgres:latest
+    image: postgres:16
     container_name: baihu_postgres
     ports:
       - ${POSTGRES_PORT}:5432

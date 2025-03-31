@@ -28,9 +28,7 @@ export class SkerAxios<D, T> {
         for (const key of Object.keys(current)) {
             const currentVal = current[key]
             if (currentVal === undefined) continue // 忽略 undefined 值
-
             const prevVal = prev[key]
-
             if (Array.isArray(currentVal)) {
                 // 数组处理：拼接新数组
                 result[key] = Array.isArray(prevVal)

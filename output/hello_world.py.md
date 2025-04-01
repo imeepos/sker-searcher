@@ -1,1 +1,0 @@
-提供基础hello world输出功能，包含print_hello_world函数。调用示例：print_hello_world()。符合PEP8规范，带类型注解。

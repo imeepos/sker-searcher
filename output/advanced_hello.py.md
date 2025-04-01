@@ -1,1 +1,0 @@
-增强版hello world输出，支持异常处理和前缀参数。调用示例：greet(prefix='Info:')。import时不会自动执行。

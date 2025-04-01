@@ -1,0 +1,1 @@
+多语言问候生成器类，支持中英文切换。使用示例：g = GreetingGenerator('zh'); g.display()

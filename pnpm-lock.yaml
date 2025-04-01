@@ -11,6 +11,9 @@ importers:
       '@sker/agents':
         specifier: workspace:*
         version: link:packages/agents
+      '@sker/axios':
+        specifier: workspace:*
+        version: link:packages/axios
       '@sker/core':
         specifier: workspace:*
         version: link:packages/core
@@ -62,6 +65,21 @@ importers:
       '@sker/tools':
         specifier: workspace:*
         version: link:../tools
+
+  packages/axios:
+    dependencies:
+      axios:
+        specifier: ^1.8.4
+        version: 1.8.4
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+      zod:
+        specifier: ^3.24.2
+        version: 3.24.2
+      zod-to-json-schema:
+        specifier: ^3.24.5
+        version: 3.24.5(zod@3.24.2)
 
   packages/core:
     dependencies:

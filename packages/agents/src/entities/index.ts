@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from '@sker/orm'
-
+export * from './rule/rule';
+export * from './func/func';
 
 @Entity({
     name: 'ai_project'

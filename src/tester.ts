@@ -71,7 +71,10 @@ async function bootstrap() {
         }
     ])
     // manager.question = (`我需要生成可以在${runCode}中的useSandbox方法中执行的代码，让AI编写code和对应的context，生成提示词模板`)
-    manager.question = `参考[创建文本对话请求]：https://docs.siliconflow.cn/cn/api-reference/chat-completions/chat-completions，用rxjs封装流式输出,实时展示思考过程`
+    manager.question = `
+
+    
+    `
     await ensureDir(join(root, 'outputs'))
     manager.answer().subscribe({
         next(value) {

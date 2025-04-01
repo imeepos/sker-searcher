@@ -11,7 +11,8 @@
     "systemAnalyster": "ts-node -r tsconfig-paths/register src/systemAnalyster.ts",
     "tester": "ts-node -r tsconfig-paths/register src/tester.ts",
     "runner": "ts-node -r tsconfig-paths/register src/runner.ts",
-    "docs": "ts-node -r tsconfig-paths/register src/docs.ts"
+    "docs": "ts-node -r tsconfig-paths/register src/docs.ts",
+    "demo": "ts-node -r tsconfig-paths/register src/demo.ts"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +21,7 @@
     "@sker/agents": "workspace:*",
     "@sker/core": "workspace:*",
     "@sker/orm": "workspace:*",
+    "@sker/axios": "workspace:*",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.13.10",
     "dayjs": "^1.11.13",

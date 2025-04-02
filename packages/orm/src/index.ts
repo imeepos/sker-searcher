@@ -13,7 +13,6 @@ export function getDataSourceOptions(): DataSourceOptions {
 }
 export function createDataSource(entities: MixedList<Function | string | EntitySchema>) {
     const options = getDataSourceOptions()
-    console.log(options)
     return new DataSource({
         ...options,
         entities: entities

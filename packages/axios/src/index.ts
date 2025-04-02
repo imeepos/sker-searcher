@@ -1,10 +1,10 @@
 
-import { map, Observable, retry, switchMap, tap } from "rxjs";
+import { map, Observable, retry, switchMap } from "rxjs";
 import axios, { AxiosError } from "axios";
 import { z, ZodType } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
-export * from 'rxjs';
-
+export * from 'axios'
+export * from 'rxjs'
 export type MODELS =
     | `Qwen/QwQ-32B`
     | `Pro/deepseek-ai/DeepSeek-R1`
@@ -59,7 +59,7 @@ export const Completion = z.object({
     messages: z.array(
         z.object({
             role: z.enum(["system"], { description: '角色' }),
-            content: z.string({ description: '分析用户需求，生成尽可能详细的提示词，使选中的模型可以更好的解决用户此类问题' })
+            content: z.string({ description: '提示词，主要限定角色的技能，风格，规范，方法，思路，经验等' })
         }),
         { description: '根据用户需求，生成不少于5组提示词，尽可能多的选择不同相关视角/不同相关场景/相关边界条件提出详细要求' }
     ).min(3)
@@ -169,20 +169,29 @@ export function createStreamCompletion<T>(
 }
 
 export function requestWithRule<T>(params: ChatCompletionParams, zod: ZodType<T>) {
-    return createStreamCompletion<ChatCompletionParams>(params).pipe(
+    return createStreamCompletion<ChatCompletionParams>({
+        ...params, messages: [
+            { role: 'system', content: `根据用户的输入，生成结果\n<format>${JSON.stringify(zodToJsonSchema(zod))}<format/>\n请按照<format>的格式输出，并将输出结果放到content` },
+            ...params.messages
+        ]
+    }).pipe(
         map(val => {
-            return zod.parse(val)
+            try {
+                return zod.parse(val)
+            } catch (e) {
+                console.error({ error: e, params: params, result: val })
+            }
         }),
     )
 }
 
-// 生成agent
-export function request<T>(params: ChatCompletionParams, zod: ZodType<T>): Observable<T> {
+
+export function createPrompts(params: ChatCompletionParams) {
     const histories: ChatMessage[] = [];
     histories.push({ role: 'system', content: `你是一个提示词生成助手` },)
-    histories.push({ role: 'system', content: `请严格按照${JSON.stringify(CompletionSchema)}格式输出，并将输出结果放到content` })
+    histories.push({ role: 'system', content: `根据用户的输入，生成结果\n<format>${JSON.stringify(CompletionSchema)}<format/>\n请按照<format>的格式输出，并将输出结果放到content` })
     histories.push(...params.messages.map(it => {
-        it.content = `生成<content>${it.content}</content>的提示词`
+        it.content = `<content>${it.content}</content>\n生成符合<content>的提示词`
         return it;
     }))
     const currentParams: ChatCompletionParams = {
@@ -198,26 +207,24 @@ export function request<T>(params: ChatCompletionParams, zod: ZodType<T>): Obser
                 val = val[0]
             }
             return Completion.parse(val)
-        }),
+        })
+    )
+}
+
+// 生成agent
+export function request<T>(params: ChatCompletionParams, zod: ZodType<T>): Observable<T | undefined> {
+    return createPrompts(params).pipe(
         switchMap(val => {
             return requestWithRule<T>({
                 ...val,
                 messages: [
                     ...val.messages,
-                    { role: 'system', content: `根据用户的输入，生成结果，请严格按照${JSON.stringify(zodToJsonSchema(zod))}的格式输出，并将输出结果放到content` },
                     ...params.messages
                 ],
                 response_format: { type: 'json_object' }
             }, zod).pipe(
                 retry(3)
             )
-        }),
-        tap(value => {
-            if (typeof value === 'string') {
-                histories.push({ role: 'assistant', content: value })
-            } else {
-                histories.push({ role: 'assistant', content: JSON.stringify(value) })
-            }
         })
     )
 }

@@ -1,5 +1,5 @@
 import { request } from "@sker/axios";
-import { from, switchMap } from "@sker/core";
+import { from, switchMap } from "@sker/axios";
 import { Column, Entity, PrimaryGeneratedColumn, useEntityManagerTransaction } from "@sker/orm";
 import { z } from "zod";
 

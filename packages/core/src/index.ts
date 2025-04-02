@@ -3,9 +3,6 @@ export * from './Agent'
 export * from './Coordinator'
 export * from './skerAxios'
 export * from './siliconflow'
-export * from 'rxjs'
-export * from 'axios'
-
 import { Observable } from "rxjs";
 import axios, { AxiosError } from "axios";
 export type MODELS =

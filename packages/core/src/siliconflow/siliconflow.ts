@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from "axios";
-import { SkerAxios } from "../skerAxios";
+import { SkerAxios } from "../skerAxios.js";
 
 
 export class Siliconflow<D, T> extends SkerAxios<D, T> {

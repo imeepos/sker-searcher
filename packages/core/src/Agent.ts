@@ -1,7 +1,7 @@
 import { defer, Observable, of } from 'rxjs';
 import { catchError, mergeMap, retry, tap } from 'rxjs/operators';
-import { isTaskResult, TaskResult } from './types';
-import { Message } from './siliconflow';
+import { isTaskResult, TaskResult } from './types.js';
+import { Message } from './siliconflow/index.js';
 
 export abstract class Agent<T = any> {
     private retries: number = 3;

@@ -1,4 +1,4 @@
-import { createPrompts, mergeMap, MODELS, requestWithRule } from "@sker/axios";
+import { concatMap, createPrompts, mergeMap, MODELS, requestWithRule } from "@sker/axios";
 import { createStreamCompletion, from, of, switchMap } from "@sker/axios";
 import { Column, CreateDateColumn, Entity, Not, PrimaryGeneratedColumn, UpdateDateColumn, useEntityManagerTransaction } from "@sker/orm";
 import { z, ZodType } from "zod";
@@ -26,7 +26,8 @@ export class AiAgent {
                             { role: 'user', content: question },
                         ],
                         response_format: { type: 'json_object' },
-                        temperature: parseFloat(`${(agent.temperature || 30) / 100}`)
+                        temperature: parseFloat(`${(agent.temperature || 30) / 100}`),
+                        name: agent.name
                     }, rule)
                 }
                 return createStreamCompletion<T>({
@@ -36,7 +37,8 @@ export class AiAgent {
                         { role: 'user', content: question },
                     ],
                     response_format: { type: 'text' },
-                    temperature: 0.3
+                    temperature: 0.3,
+                    name: agent.name
                 })
             })
         )
@@ -48,7 +50,8 @@ export class AiAgent {
                 { role: 'user', content: desc },
             ],
             response_format: { type: 'json_object' },
-            temperature: 0.7
+            temperature: 0.7,
+            name: name
         }, AiAgentRule).pipe(
             switchMap(val => {
                 return from(useEntityManagerTransaction([AiAgent], async m => {
@@ -72,7 +75,8 @@ export class AiAgent {
                         { role: 'user', content: agent.desc },
                     ],
                     response_format: { type: 'json_object' },
-                    temperature: 0.3
+                    temperature: 0.3,
+                    name: agent.name
                 }).pipe(
                     switchMap(prompts => {
                         return from(useEntityManagerTransaction([AiAgent], async m => {
@@ -83,7 +87,7 @@ export class AiAgent {
             }),
         )
     }
-    static upgrade(name: string, question: string) {
+    static upgrade(name: string, question: string, top: AiAgent) {
         return from(useEntityManagerTransaction([AiAgent], async m => {
             return m.findOneOrFail(AiAgent, { where: { name: name } })
         })).pipe(
@@ -92,10 +96,12 @@ export class AiAgent {
                     return createPrompts({
                         model: 'Pro/deepseek-ai/DeepSeek-V3',
                         messages: [
+                            ...top.prompts,
                             { role: 'user', content: question },
                         ],
                         response_format: { type: 'json_object' },
-                        temperature: 0.7
+                        temperature: 0.7,
+                        name: agent.name
                     }).pipe(
                         switchMap(prompts => {
                             return from(useEntityManagerTransaction([AiAgent], async m => {
@@ -110,12 +116,17 @@ export class AiAgent {
     }
     static upgrades() {
         return from(useEntityManagerTransaction([AiAgent], async m => {
-            return m.find(AiAgent, { where: { parent_id: Not(0) } })
+            return m.findOneOrFail(AiAgent, { where: { parent_id: 0 } })
         })).pipe(
-            switchMap(agents => from(agents)),
-            mergeMap(agent => {
-                return AiAgent.upgrade(agent.name, agent.desc)
+            switchMap(top => {
+                return from(useEntityManagerTransaction([AiAgent], async m => m.find(AiAgent, {}))).pipe(
+                    switchMap(agents => from(agents)),
+                    concatMap(agent => {
+                        return AiAgent.upgrade(agent.name, agent.desc, top)
+                    })
+                )
             })
+
         )
     }
     @PrimaryGeneratedColumn({

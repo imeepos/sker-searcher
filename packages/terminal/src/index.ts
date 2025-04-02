@@ -8,13 +8,11 @@ export interface AgentStatus {
     /** 智能体名称 */
     name: string;
     /** 已用 token 数量 */
-    tokensUsed: number;
+    total_tokens: number;
+    prompt_tokens: number;
+    completion_tokens: number;
     /** 最后更新时间 */
-    lastUpdated: Date;
-    /**
-     * 最新的更新文本
-     */
-    lastText: string;
+    createDate: Date;
 }
 
 /**
@@ -53,7 +51,6 @@ export class MultiTerminalDisplay {
     updateAgent(agent: AgentStatus): void {
         this.agents.set(agent.name, {
             ...agent,
-            lastUpdated: new Date(),
         });
         this.render();
     }
@@ -132,13 +129,13 @@ export class MultiTerminalDisplay {
     private formatAgentBlock(agent: AgentStatus): string {
         const { width, height } = this.layout;
         const now = new Date();
-        const secondsAgo = Math.floor((now.getTime() - agent.lastUpdated.getTime()) / 1000);
+        const secondsAgo = Math.floor((now.getTime() - agent.createDate.getTime()) / 1000);
         const timeText = `${secondsAgo}s`;
 
         // 精确计算各部分宽度
         const innerWidth = width - 2; // 减去边框
         const timeWidth = timeText.length + 1; // 时间文本宽度加一个空格
-        const titleMaxWidth = innerWidth - timeWidth - 3;
+        const titleMaxWidth = innerWidth - timeWidth - 2;
 
         // 处理标题文本
         const title = agent.name.length > titleMaxWidth
@@ -149,24 +146,11 @@ export class MultiTerminalDisplay {
         const titleLine = `│ ${chalk.bold(title.padEnd(titleMaxWidth))} ${chalk.dim(timeText.padStart(3))} │`;
 
         // 构建token行
-        const tokenLine = `│ Tokens: ${chalk.green(agent.tokensUsed.toLocaleString())}${' '.repeat(innerWidth - 8 - agent.tokensUsed.toLocaleString().length - 1)}│`;
+        const totalTokensLine = `│ Total Tokens: ${chalk.green(agent.total_tokens.toLocaleString())}${' '.repeat(innerWidth - 14 - agent.total_tokens.toLocaleString().length - 1)}│`;
 
-        // 处理lastText - 只显示最近三行
-        const processLastText = (text: string): string[] => {
-            // 按换行符分割文本
-            const lines = text.split('\n');
-            // 只取最后三行
-            const recentLines = lines.slice(-3);
-            // 处理每行文本，确保不超过innerWidth
-            return recentLines.map(line => {
-                if (line.length > innerWidth) {
-                    return line.substring(0, innerWidth - 3) + '…';
-                }
-                return line.padEnd(innerWidth);
-            });
-        };
+        const promptTokensLine = `│ Prompt Tokens: ${chalk.green(agent.prompt_tokens.toLocaleString())}${' '.repeat(innerWidth - 15 - agent.prompt_tokens.toLocaleString().length - 1)}│`;
 
-        const textLines = processLastText(agent.lastText);
+        const completionTokensLine = `│ Completion Tokens: ${chalk.green(agent.completion_tokens.toLocaleString())}${' '.repeat(innerWidth - 19 - agent.completion_tokens.toLocaleString().length - 1)}│`;
 
         // 构建边框
         const border = chalk.gray('─'.repeat(innerWidth));
@@ -177,8 +161,9 @@ export class MultiTerminalDisplay {
         const contentHeight = height - 2; // 减去上下边框
         const contentLines = [
             titleLine,
-            tokenLine,
-            ...textLines.map(line => `│ ${chalk.dim(line)} │`)
+            totalTokensLine,
+            promptTokensLine,
+            completionTokensLine
         ];
 
         const remainingLines = Math.max(0, contentHeight - contentLines.length);

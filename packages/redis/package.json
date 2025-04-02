@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "tsc": "tsc"
+    "tsc": "tsup"
   },
   "keywords": [],
   "author": "",

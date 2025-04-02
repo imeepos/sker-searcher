@@ -2,11 +2,11 @@
   "name": "@sker/core",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "types": "dist/index.d.ts",
-  "type": "module",
+  "module": "dist/index.js",
   "scripts": {
-    "tsc": "tsc"
+    "tsc": "tsup"
   },
   "keywords": [],
   "author": "",

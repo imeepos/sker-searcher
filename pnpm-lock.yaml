@@ -74,6 +74,9 @@ importers:
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
+      require-resolve:
+        specifier: ^0.0.2
+        version: 0.0.2
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.13.10)(typescript@5.8.2)
@@ -104,6 +107,9 @@ importers:
 
   packages/axios:
     dependencies:
+      '@sker/terminal':
+        specifier: workspace:*
+        version: link:../terminal
       axios:
         specifier: ^1.8.4
         version: 1.8.4
@@ -129,7 +135,11 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
 
-  packages/mq: {}
+  packages/mq:
+    dependencies:
+      tsup:
+        specifier: ^8.4.0
+        version: 8.4.0(typescript@5.8.2)
 
   packages/orm:
     dependencies:
@@ -1841,6 +1851,9 @@ packages:
     resolution: {integrity: sha512-bpC7GYwiDYQ4wYLe+FA8lhRjhQCMcQGuSgGGqDkg/QerRWw9CmGRT0iSOVRSZJ29NMLZgIzqaljJ63oaL4NIJQ==}
     engines: {node: '>=4'}
 
+  path-extra@1.0.3:
+    resolution: {integrity: sha512-vYm3+GCkjUlT1rDvZnDVhNLXIRvwFPaN8ebHAFcuMJM/H0RBOPD7JrcldiNLd9AS3dhAyUHLa4Hny5wp1A+Ffw==}
+
   path-is-absolute@1.0.1:
     resolution: {integrity: sha512-AVbw3UJ2e9bq64vSaS9Am0fje1Pa8pbGqTTsmXfaIiMpnr5DlDhfJOuLj9Sf95ZPVDAUerDfEk88MPmPe7UCQg==}
     engines: {node: '>=0.10.0'}
@@ -2020,6 +2033,9 @@ packages:
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
+
+  require-resolve@0.0.2:
+    resolution: {integrity: sha512-eafQVaxdQsWUB8HybwognkdcIdKdQdQBwTxH48FuE6WI0owZGKp63QYr1MRp73PoX0AcyB7MDapZThYUY8FD0A==}
 
   resolve-from@5.0.0:
     resolution: {integrity: sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==}
@@ -2413,6 +2429,9 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+
+  x-path@0.0.2:
+    resolution: {integrity: sha512-zQ4WFI0XfJN1uEkkrB19Y4TuXOlHqKSxUJo0Yt+axPjRm8tCG6SJ6+Wo3/+Kjg4c2c8IvBXuJ0uYoshxNn4qMw==}
 
   xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
@@ -4248,6 +4267,8 @@ snapshots:
 
   path-exists@3.0.0: {}
 
+  path-extra@1.0.3: {}
+
   path-is-absolute@1.0.1: {}
 
   path-key@3.1.1: {}
@@ -4410,6 +4431,10 @@ snapshots:
       jsesc: 3.0.2
 
   require-directory@2.1.1: {}
+
+  require-resolve@0.0.2:
+    dependencies:
+      x-path: 0.0.2
 
   resolve-from@5.0.0: {}
 
@@ -4831,6 +4856,10 @@ snapshots:
       strip-ansi: 7.1.0
 
   wrappy@1.0.2: {}
+
+  x-path@0.0.2:
+    dependencies:
+      path-extra: 1.0.3
 
   xtend@4.0.2: {}
 

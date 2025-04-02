@@ -42,6 +42,7 @@
     "log-update": "^6.1.0",
     "pg": "^8.14.1",
     "reflect-metadata": "^0.2.2",
+    "require-resolve": "^0.0.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "tsup": "^8.4.0",

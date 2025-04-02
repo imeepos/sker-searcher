@@ -4,9 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "module",
+  "module": "dist/index.mjs",
   "scripts": {
-    "tsc": "tsc"
+    "tsc": "tsup"
   },
   "keywords": [],
   "author": "",

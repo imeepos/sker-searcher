@@ -1,3 +1,3 @@
 
-export * from './siliconflow'
-export * from './chat/completions'
+export * from './siliconflow.js'
+export * from './chat/completions.js'

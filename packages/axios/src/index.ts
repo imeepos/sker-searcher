@@ -1,9 +1,10 @@
 
 import { map, Observable, retry, switchMap } from "rxjs";
 import axios, { AxiosError } from "axios";
-import { z, ZodType } from 'zod'
+import { string, z, ZodType } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
-export * from 'axios'
+import { MultiTerminalDisplay, AgentStatus } from '@sker/terminal'
+import { randomUUID } from "crypto";
 export * from 'rxjs'
 export type MODELS =
     | `Qwen/QwQ-32B`
@@ -31,6 +32,7 @@ interface ChatCompletionParams {
     model?: MODELS;
     temperature?: number;
     response_format?: ResponseFormatJsonObject | ResponseFormatText | ResponseFormatJsonSchema;
+    name?: string;
 }
 
 export interface Message {
@@ -47,10 +49,22 @@ interface CompletionChoice {
 interface StreamResponse {
     id: string;
     created: number;
+    object: string;
+    model: string;
     choices: Array<CompletionChoice>;
+    system_fingerprint: string;
+    usage: {
+        prompt_tokens: number;
+        completion_tokens: number;
+        total_tokens: number;
+    }
 }
 
-
+const display = new MultiTerminalDisplay({
+    width: 40,
+    height: 6,
+    margin: 2
+});
 export const Completion = z.object({
     model: z.enum([`Qwen/QwQ-32B`
         , `Pro/deepseek-ai/DeepSeek-R1`
@@ -84,7 +98,7 @@ export function createStreamCompletion<T>(
         const controller = new AbortController();
         let reasoning_content = Buffer.from(``)
         let content = Buffer.from(``)
-
+        params.name = params.name || randomUUID()
         const onEnd = () => {
             try {
                 const response_format = params.response_format
@@ -111,6 +125,13 @@ export function createStreamCompletion<T>(
             }
             subscriber.complete()
         }
+        const agent: AgentStatus = {
+            createDate: new Date(),
+            total_tokens: 0,
+            prompt_tokens: 0,
+            completion_tokens: 0,
+            name: params.name || ``
+        }
         streamClient
             .request({
                 url: `/chat/completions`,
@@ -135,16 +156,18 @@ export function createStreamCompletion<T>(
                                     return;
                                 }
                                 const json: StreamResponse = JSON.parse(data);
+                                display.updateAgent({
+                                    ...agent,
+                                    ...json.usage
+                                })
                                 json.choices.map(choice => {
                                     const delta = choice.delta
                                     if (delta) {
                                         if (delta.reasoning_content) {
                                             reasoning_content = Buffer.concat([reasoning_content, Buffer.from(delta.reasoning_content)])
-                                            process.stdout.write(delta.reasoning_content)
                                         }
                                         if (delta.content) {
                                             content = Buffer.concat([content, Buffer.from(delta.content)])
-                                            process.stdout.write(delta.content)
                                         }
                                     }
                                 })

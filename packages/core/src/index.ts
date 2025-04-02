@@ -1,8 +1,8 @@
-export * from './types'
-export * from './Agent'
-export * from './Coordinator'
-export * from './skerAxios'
-export * from './siliconflow'
+export * from './types.js'
+export * from './Agent.js'
+export * from './Coordinator.js'
+export * from './skerAxios.js'
+export * from './siliconflow/index.js'
 import { Observable } from "rxjs";
 import axios, { AxiosError } from "axios";
 export type MODELS =

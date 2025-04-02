@@ -1,7 +1,7 @@
 import { defer, forkJoin, from, Observable, Subject } from 'rxjs';
 import { concatMap, tap, toArray } from 'rxjs/operators';
-import { Agent } from './Agent';
-import { TaskResult } from './types';
+import { Agent } from './Agent.js';
+import { TaskResult } from './types.js';
 
 export class Coordinator {
     private resultsSubject = new Subject<TaskResult>();

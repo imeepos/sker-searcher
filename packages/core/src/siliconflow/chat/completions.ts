@@ -1,4 +1,4 @@
-import { Siliconflow } from "../siliconflow";
+import { Siliconflow } from "../siliconflow.js";
 export interface Message {
     role: "system" | "user" | "assistant";
     content: string;

@@ -11,19 +11,30 @@ export function getDataSourceOptions(): DataSourceOptions {
         password: process.env.POSTGRES_PASSWORD
     }
 }
-export function createDataSource(entities: MixedList<Function | string | EntitySchema>) {
+
+let ds: DataSource;
+export async function createDataSource(entities: MixedList<Function | string | EntitySchema>) {
+    if (ds) {
+        if (ds.isInitialized) {
+            return ds;
+        }
+        await ds.initialize()
+        return ds;
+    }
     const options = getDataSourceOptions()
-    return new DataSource({
+    ds = new DataSource({
         ...options,
         entities: entities
     })
+    await ds.initialize()
+    return ds;
 }
 export async function useDataSource<T>(entities: MixedList<Function | string | EntitySchema>, cb: (ds: DataSource) => Promise<T>) {
-    const ds = createDataSource(entities)
-    await ds.initialize()
-    const res = await cb(ds)
-    await ds.destroy()
-    return res;
+    const ds = await createDataSource(entities)
+    ds.setOptions({
+        entities: entities
+    })
+    return await cb(ds)
 }
 export async function useEntityManager<T>(entities: MixedList<Function | string | EntitySchema>, cb: (m: EntityManager) => Promise<T>) {
     return await useDataSource(entities, (ds) => cb(ds.createEntityManager()))

@@ -149,6 +149,17 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.redis.rule=Host(`redis.${HOST_NAME}`)"
       - "traefik.http.services.redis.loadbalancer.server.port=6379"
+  pgvector:
+    image: ankane/pgvector
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${PG_VECTOR_PORT}:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
   postgres:
     image: postgres:16
     container_name: baihu_postgres
@@ -189,4 +200,6 @@ volumes:
   n8n_data:
     driver: local
   portainer_data:
+    driver: local
+  pgvector_data:
     driver: local

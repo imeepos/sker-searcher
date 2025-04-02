@@ -1,6 +1,6 @@
-import { concatMap, createPrompts, mergeMap, MODELS, requestWithRule } from "@sker/axios";
+import { createPrompts, forkJoin, MODELS, requestWithRule } from "@sker/axios";
 import { createStreamCompletion, from, of, switchMap } from "@sker/axios";
-import { Column, CreateDateColumn, Entity, Not, PrimaryGeneratedColumn, UpdateDateColumn, useEntityManagerTransaction } from "@sker/orm";
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, useEntityManager } from "@sker/orm";
 import { z, ZodType } from "zod";
 
 export const AiAgentRule = z.object({
@@ -14,7 +14,7 @@ export const AiAgentRule = z.object({
 })
 export class AiAgent {
     static use<T>(name: string, question: string, rule?: ZodType<T>) {
-        return from(useEntityManagerTransaction([AiAgent], async m => {
+        return from(useEntityManager([AiAgent], async m => {
             return m.findOneOrFail(AiAgent, { where: { name: name } })
         })).pipe(
             switchMap(agent => {
@@ -54,7 +54,7 @@ export class AiAgent {
             name: name
         }, AiAgentRule).pipe(
             switchMap(val => {
-                return from(useEntityManagerTransaction([AiAgent], async m => {
+                return from(useEntityManager([AiAgent], async m => {
                     const parentAgent = await m.findOne(AiAgent, { where: { name: name } })
                     const e = m.create(AiAgent, val)
                     const item = await m.findOne(AiAgent, { where: { name: e.name } })
@@ -79,7 +79,7 @@ export class AiAgent {
                     name: agent.name
                 }).pipe(
                     switchMap(prompts => {
-                        return from(useEntityManagerTransaction([AiAgent], async m => {
+                        return from(useEntityManager([AiAgent], async m => {
                             await m.update(AiAgent, agent.id, { prompts: prompts.messages as any[], model: prompts.model, temperature: prompts.temperature * 100 })
                         }))
                     })
@@ -88,13 +88,13 @@ export class AiAgent {
         )
     }
     static upgrade(name: string, question: string, top: AiAgent) {
-        return from(useEntityManagerTransaction([AiAgent], async m => {
+        return from(useEntityManager([AiAgent], async m => {
             return m.findOneOrFail(AiAgent, { where: { name: name } })
         })).pipe(
             switchMap(agent => {
                 if (agent) {
                     return createPrompts({
-                        model: 'Pro/deepseek-ai/DeepSeek-V3',
+                        model: top.model || 'Pro/deepseek-ai/DeepSeek-V3',
                         messages: [
                             ...top.prompts,
                             { role: 'user', content: question },
@@ -104,7 +104,7 @@ export class AiAgent {
                         name: agent.name
                     }).pipe(
                         switchMap(prompts => {
-                            return from(useEntityManagerTransaction([AiAgent], async m => {
+                            return from(useEntityManager([AiAgent], async m => {
                                 await m.update(AiAgent, agent.id, { prompts: prompts.messages as any[], model: prompts.model, temperature: prompts.temperature * 100 })
                             }))
                         })
@@ -115,18 +115,19 @@ export class AiAgent {
         )
     }
     static upgrades() {
-        return from(useEntityManagerTransaction([AiAgent], async m => {
+        return from(useEntityManager([AiAgent], async m => {
             return m.findOneOrFail(AiAgent, { where: { parent_id: 0 } })
         })).pipe(
             switchMap(top => {
-                return from(useEntityManagerTransaction([AiAgent], async m => m.find(AiAgent, {}))).pipe(
-                    switchMap(agents => from(agents)),
-                    concatMap(agent => {
-                        return AiAgent.upgrade(agent.name, agent.desc, top)
+                return from(useEntityManager([AiAgent], async m => m.find(AiAgent, {}))).pipe(
+                    switchMap(agents => {
+                        const upgradeObservables = agents.map(agent =>
+                            AiAgent.upgrade(agent.name, agent.desc, top)
+                        );
+                        return forkJoin(upgradeObservables); // 并行执行所有升级
                     })
                 )
             })
-
         )
     }
     @PrimaryGeneratedColumn({
@@ -175,7 +176,7 @@ export class AiAgent {
         length: 128,
         default: ''
     })
-    model: string;
+    model: MODELS;
 
     @Column({
         type: 'int',

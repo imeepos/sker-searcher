@@ -1,7 +1,7 @@
 
 import { map, Observable, retry, switchMap } from "rxjs";
 import axios, { AxiosError } from "axios";
-import { string, z, ZodType } from 'zod'
+import { z, ZodType } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import { MultiTerminalDisplay, AgentStatus } from '@sker/terminal'
 import { randomUUID } from "crypto";
@@ -80,17 +80,31 @@ export const Completion = z.object({
 })
 
 export const CompletionSchema = zodToJsonSchema(Completion)
-
+function getMaxTokens(model: MODELS) {
+    switch (model) {
+        case 'Qwen/QwQ-32B':
+            return 32768
+        case 'Pro/deepseek-ai/DeepSeek-V3':
+            return 8192
+        case 'Pro/deepseek-ai/DeepSeek-R1':
+            return 16384
+        default:
+            return 512
+    }
+}
 // 核心流式处理函数
 export function createStreamCompletion<T>(
     params: ChatCompletionParams
 ): Observable<T> {
     // 创建专用 axios 实例
+    const sk = process.env.SILICONFLOW_API_KEY || ''
+    const sks = sk.split(',')
+    const useSk = sks[Math.floor(Math.random() * sks.length)]
     const streamClient = axios.create({
         baseURL: "https://api.siliconflow.cn/v1",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.SILICONFLOW_API_KEY}`,
+            Authorization: `Bearer ${useSk}`,
         },
         responseType: "stream", // 关键配置
     });
@@ -139,8 +153,9 @@ export function createStreamCompletion<T>(
                 data: {
                     ...params,
                     stream: true,
+                    max_tokens: getMaxTokens(params.model || 'Qwen/QwQ-32B')
                 },
-                signal: controller.signal
+                signal: controller.signal,
             })
             .then((response) => {
                 const stream = response.data;
@@ -155,22 +170,30 @@ export function createStreamCompletion<T>(
                                     onEnd();
                                     return;
                                 }
-                                const json: StreamResponse = JSON.parse(data);
-                                display.updateAgent({
-                                    ...agent,
-                                    ...json.usage
-                                })
-                                json.choices.map(choice => {
-                                    const delta = choice.delta
-                                    if (delta) {
-                                        if (delta.reasoning_content) {
-                                            reasoning_content = Buffer.concat([reasoning_content, Buffer.from(delta.reasoning_content)])
+                                try {
+                                    const json: StreamResponse = JSON.parse(data);
+                                    display.updateAgent({
+                                        ...agent,
+                                        ...json.usage
+                                    })
+                                    json.choices.map(choice => {
+                                        const delta = choice.delta
+                                        if (delta) {
+                                            if (delta.reasoning_content) {
+                                                reasoning_content = Buffer.concat([reasoning_content, Buffer.from(delta.reasoning_content)])
+                                            }
+                                            if (delta.content) {
+                                                content = Buffer.concat([content, Buffer.from(delta.content)])
+                                            }
                                         }
-                                        if (delta.content) {
-                                            content = Buffer.concat([content, Buffer.from(delta.content)])
-                                        }
-                                    }
-                                })
+                                    })
+                                } catch (e) {
+                                    console.log({
+                                        error: e,
+                                        data: data
+                                    })
+                                    throw e;
+                                }
                             }
                         }
                     } catch (e) {

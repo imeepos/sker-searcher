@@ -8,7 +8,8 @@ export function getDataSourceOptions(): DataSourceOptions {
         port: parseInt(`${process.env.POSTGRES_PORT || 5432}`),
         database: process.env.POSTGRES_DB,
         username: process.env.POSTGRES_USER,
-        password: process.env.POSTGRES_PASSWORD
+        password: process.env.POSTGRES_PASSWORD,
+        poolSize: 30
     }
 }
 

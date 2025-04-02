@@ -2,9 +2,9 @@
   "name": "@sker/core",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.cjs",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "module": "dist/index.js",
+  "module": "dist/index.mjs",
   "scripts": {
     "tsc": "tsup"
   },

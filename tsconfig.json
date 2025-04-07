@@ -11,7 +11,10 @@
 		"forceConsistentCasingInFileNames": true,
 		"strict": true,
 		"strictPropertyInitialization": false,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"jsx": "react",
+        "jsxFactory": "React.createElement",
+        "jsxFragmentFactory": "React.Fragment"
 	},
 	"include": ["src"]
 }

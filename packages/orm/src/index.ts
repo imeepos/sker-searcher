@@ -1,11 +1,23 @@
 import { DataSource, DataSourceOptions, EntityManager, QueryRunner, SelectQueryBuilder, MixedList, EntitySchema } from 'typeorm'
 export * from 'typeorm'
+export class SkerDataSource extends DataSource {
+
+    setOptions(options: Partial<DataSourceOptions>): this {
+        super.setOptions(options)
+        return this;
+    }
+
+    async reBuildMetadatas() {
+        await super.buildMetadatas()
+        await super.synchronize()
+    }
+}
 export function getDataSourceOptions(): DataSourceOptions {
     return {
         type: 'postgres',
         synchronize: true,
-        host: process.env.POSTGRES_HOST || `localhost`,
-        port: parseInt(`${process.env.POSTGRES_PORT || 5432}`),
+        host: process.env.PG_VECTOR_HOST || `localhost`,
+        port: parseInt(`${process.env.PG_VECTOR_PORT || 5432}`),
         database: process.env.POSTGRES_DB,
         username: process.env.POSTGRES_USER,
         password: process.env.POSTGRES_PASSWORD,
@@ -13,7 +25,7 @@ export function getDataSourceOptions(): DataSourceOptions {
     }
 }
 
-let ds: DataSource;
+let ds: SkerDataSource;
 export async function createDataSource(entities: MixedList<Function | string | EntitySchema>) {
     if (ds) {
         if (ds.isInitialized) {
@@ -23,7 +35,7 @@ export async function createDataSource(entities: MixedList<Function | string | E
         return ds;
     }
     const options = getDataSourceOptions()
-    ds = new DataSource({
+    ds = new SkerDataSource({
         ...options,
         entities: entities
     })
@@ -35,6 +47,7 @@ export async function useDataSource<T>(entities: MixedList<Function | string | E
     ds.setOptions({
         entities: entities
     })
+    await ds.reBuildMetadatas()
     return await cb(ds)
 }
 export async function useEntityManager<T>(entities: MixedList<Function | string | EntitySchema>, cb: (m: EntityManager) => Promise<T>) {

@@ -95,6 +95,9 @@ importers:
 
   packages/agents:
     dependencies:
+      '@sker/axios':
+        specifier: workspace:*
+        version: link:../axios
       '@sker/core':
         specifier: workspace:*
         version: link:../core
@@ -110,6 +113,9 @@ importers:
       '@sker/terminal':
         specifier: workspace:*
         version: link:../terminal
+      '@sker/tools':
+        specifier: workspace:*
+        version: link:../tools
       axios:
         specifier: ^1.8.4
         version: 1.8.4
@@ -156,12 +162,24 @@ importers:
 
   packages/terminal:
     dependencies:
+      ansi-escapes:
+        specifier: ^7.0.0
+        version: 7.0.0
       chalk:
         specifier: ^5.4.1
         version: 5.4.1
-      log-update:
-        specifier: ^6.1.0
-        version: 6.1.0
+      cli-cursor:
+        specifier: ^5.0.0
+        version: 5.0.0
+      slice-ansi:
+        specifier: ^7.1.0
+        version: 7.1.0
+      strip-ansi:
+        specifier: ^7.1.0
+        version: 7.1.0
+      wrap-ansi:
+        specifier: ^9.0.0
+        version: 9.0.0
 
   packages/tools:
     dependencies:

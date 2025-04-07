@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "module": "dist/index.mjs",
+  "type": "module",
   "scripts": {
     "tsc": "tsup"
   },

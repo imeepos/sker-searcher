@@ -2,9 +2,8 @@
   "name": "@sker/mq",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.cjs",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "module": "dist/index.js",
   "type": "module",
   "scripts": {
     "tsc": "tsup"

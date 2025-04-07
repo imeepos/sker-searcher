@@ -1,7 +1,8 @@
-import { createPrompts, forkJoin, MODELS, requestWithRule } from "@sker/axios";
+import { createPrompts, forkJoin, map, MODELS, requestWithRule } from "@sker/axios";
 import { createStreamCompletion, from, of, switchMap } from "@sker/axios";
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, useEntityManager } from "@sker/orm";
 import { z, ZodType } from "zod";
+import { AiAgentLog } from "./agentLog.js";
 
 export const AiAgentRule = z.object({
     name: z.string({ description: '智能体的英文名字, 英文名突出技能以及职能（如CodeForge）' }),
@@ -28,7 +29,31 @@ export class AiAgent {
                         response_format: { type: 'json_object' },
                         temperature: parseFloat(`${(agent.temperature || 30) / 100}`),
                         name: agent.name
-                    }, rule)
+                    }, rule).pipe(
+                        switchMap(val => {
+                            return from(useEntityManager([AiAgentLog], async (m) => {
+                                const log = m.create(AiAgentLog, {
+                                    agent_id: agent.id,
+                                    prompts: {
+                                        model: 'Pro/deepseek-ai/DeepSeek-V3',
+                                        messages: [
+                                            ...agent.prompts,
+                                            { role: 'user', content: question },
+                                        ],
+                                        response_format: { type: 'text' },
+                                        temperature: 0.3,
+                                        name: agent.name
+                                    },
+                                    answer: [
+                                        { role: 'assistant', content: val }
+                                    ]
+                                })
+                                await m.save(AiAgentLog, log)
+                            })).pipe(
+                                map(() => val)
+                            )
+                        })
+                    )
                 }
                 return createStreamCompletion<T>({
                     model: 'Pro/deepseek-ai/DeepSeek-V3',
@@ -39,7 +64,31 @@ export class AiAgent {
                     response_format: { type: 'text' },
                     temperature: 0.3,
                     name: agent.name
-                })
+                }).pipe(
+                    switchMap(val => {
+                        return from(useEntityManager([AiAgentLog], async (m) => {
+                            const log = m.create(AiAgentLog, {
+                                agent_id: agent.id,
+                                prompts: {
+                                    model: 'Pro/deepseek-ai/DeepSeek-V3',
+                                    messages: [
+                                        ...agent.prompts,
+                                        { role: 'user', content: question },
+                                    ],
+                                    response_format: { type: 'text' },
+                                    temperature: 0.3,
+                                    name: agent.name
+                                },
+                                answer: [
+                                    { role: 'assistant', content: val }
+                                ]
+                            })
+                            await m.save(AiAgentLog, log)
+                        })).pipe(
+                            map(() => val)
+                        )
+                    })
+                )
             })
         )
     }

@@ -1,10 +1,11 @@
 
-import { map, Observable, retry, switchMap } from "rxjs";
+import { from, map, Observable, retry, switchMap } from "rxjs";
 import axios, { AxiosError } from "axios";
 import { z, ZodType } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import { MultiTerminalDisplay, AgentStatus } from '@sker/terminal'
 import { randomUUID } from "crypto";
+import { useTools } from '@sker/tools'
 export * from 'rxjs'
 export type MODELS =
     | `Qwen/QwQ-32B`
@@ -34,12 +35,21 @@ interface ChatCompletionParams {
     response_format?: ResponseFormatJsonObject | ResponseFormatText | ResponseFormatJsonSchema;
     name?: string;
 }
-
+export interface ToolCallFunction {
+    name: string;
+    arguments: string;
+}
+export interface ToolCall {
+    id: string;
+    type: 'function';
+    function: ToolCallFunction;
+}
 export interface Message {
     role: "system" | "user" | "assistant";
     content: string;
     reasoning_content?: string;
-    name?: string;
+    tool_calls?: ToolCall[];
+    finish_reason: 'stop' | 'eos' | 'length' | 'tool_calls';
 }
 interface CompletionChoice {
     index: number;
@@ -108,110 +118,128 @@ export function createStreamCompletion<T>(
         },
         responseType: "stream", // 关键配置
     });
-    return new Observable((subscriber) => {
-        const controller = new AbortController();
-        let reasoning_content = Buffer.from(``)
-        let content = Buffer.from(``)
-        params.name = params.name || randomUUID()
-        const onEnd = () => {
-            try {
-                const response_format = params.response_format
-                if (response_format) {
-                    if (response_format.type === 'text') {
-                        subscriber.next(content.toString('utf-8') as T)
-                    }
-                    if (response_format.type === 'json_object') {
-                        try {
-                            const item = JSON.parse(reasoning_content.toString('utf-8'))
-                            subscriber.next(item)
-                        } catch (e) {
-                            try {
-                                const item = JSON.parse(content.toString('utf-8'))
-                                subscriber.next(item)
-                            } catch (e) {
-                                subscriber.next(reasoning_content.toString('utf-8') as T)
-                            }
-                        }
-                    }
-                }
-            } catch (e) {
-                subscriber.error(e)
-            }
-            subscriber.complete()
-        }
-        const agent: AgentStatus = {
-            createDate: new Date(),
-            total_tokens: 0,
-            prompt_tokens: 0,
-            completion_tokens: 0,
-            name: params.name || ``
-        }
-        streamClient
-            .request({
-                url: `/chat/completions`,
-                method: 'post',
-                data: {
-                    ...params,
-                    stream: true,
-                    max_tokens: getMaxTokens(params.model || 'Qwen/QwQ-32B')
-                },
-                signal: controller.signal,
-            })
-            .then((response) => {
-                const stream = response.data;
-                // 流数据处理处理器
-                const dataHandler = (chunk: Buffer) => {
+    return from(useTools()).pipe(
+        switchMap(tools => {
+            return new Observable<T>((subscriber) => {
+                const controller = new AbortController();
+                let reasoning_content = Buffer.from(``)
+                let content = Buffer.from(``)
+                params.name = params.name || randomUUID()
+                const toolCallsMap: Map<string, any> = new Map()
+                const onEnd = () => {
                     try {
-                        const payloads = chunk.toString().split("\n\n");
-                        for (const payload of payloads) {
-                            if (payload.startsWith("data:")) {
-                                const data = payload.replace(/^data: /, "");
-                                if (data === "[DONE]") {
-                                    onEnd();
-                                    return;
-                                }
+                        const response_format = params.response_format
+                        if (response_format) {
+                            if (response_format.type === 'text') {
+                                subscriber.next(content.toString('utf-8') as T)
+                            }
+                            if (response_format.type === 'json_object') {
                                 try {
-                                    const json: StreamResponse = JSON.parse(data);
-                                    display.updateAgent({
-                                        ...agent,
-                                        ...json.usage
-                                    })
-                                    json.choices.map(choice => {
-                                        const delta = choice.delta
-                                        if (delta) {
-                                            if (delta.reasoning_content) {
-                                                reasoning_content = Buffer.concat([reasoning_content, Buffer.from(delta.reasoning_content)])
-                                            }
-                                            if (delta.content) {
-                                                content = Buffer.concat([content, Buffer.from(delta.content)])
-                                            }
-                                        }
-                                    })
+                                    const item = JSON.parse(reasoning_content.toString('utf-8'))
+                                    subscriber.next(item)
                                 } catch (e) {
-                                    console.log({
-                                        error: e,
-                                        data: data
-                                    })
-                                    throw e;
+                                    try {
+                                        const item = JSON.parse(content.toString('utf-8'))
+                                        subscriber.next(item)
+                                    } catch (e) {
+                                        subscriber.next(reasoning_content.toString('utf-8') as T)
+                                    }
                                 }
                             }
                         }
                     } catch (e) {
-                        subscriber.error(e);
+                        subscriber.error(e)
                     }
-                };
-                // 绑定事件处理器
-                stream.on("data", dataHandler);
-                stream.on("end", onEnd);
-                stream.on("error", (e: Error) => subscriber.error(e));
-            })
-            .catch((err: AxiosError) => {
-                subscriber.error(err.response?.data || err.message);
-            });
+                    subscriber.complete()
+                }
+                const agent: AgentStatus = {
+                    createDate: new Date(),
+                    total_tokens: 0,
+                    prompt_tokens: 0,
+                    completion_tokens: 0,
+                    name: params.name || ``
+                }
+                streamClient
+                    .request({
+                        url: `/chat/completions`,
+                        method: 'post',
+                        data: {
+                            ...params,
+                            stream: true,
+                            max_tokens: getMaxTokens(params.model || 'Qwen/QwQ-32B'),
+                            tools: tools
+                        },
+                        signal: controller.signal,
+                    })
+                    .then((response) => {
+                        const stream = response.data;
+                        // 流数据处理处理器
+                        const dataHandler = (chunk: Buffer) => {
+                            try {
+                                const payloads = chunk.toString().split("\n\n");
+                                for (const payload of payloads) {
+                                    if (payload.startsWith("data:")) {
+                                        const data = payload.replace(/^data: /, "");
+                                        if (data === "[DONE]") {
+                                            onEnd();
+                                            return;
+                                        }
+                                        try {
+                                            const json: StreamResponse = JSON.parse(data);
+                                            display.updateAgent({
+                                                ...agent,
+                                                ...json.usage
+                                            })
+                                            json.choices.map(choice => {
+                                                const delta = choice.delta
+                                                if (delta) {
+                                                    if (delta.reasoning_content) {
+                                                        reasoning_content = Buffer.concat([reasoning_content, Buffer.from(delta.reasoning_content)])
+                                                    }
+                                                    if (delta.content) {
+                                                        content = Buffer.concat([content, Buffer.from(delta.content)])
+                                                    }
+                                                    if (delta.tool_calls) {
+                                                        console.log(delta)
+                                                        delta.tool_calls.map(tool => {
+                                                            if (tool.id) {
+                                                                const func = toolCallsMap.get(tool.id) || {}
+                                                                const id = tool.id
+                                                                const name = tool.function?.name
+                                                                const args = tool.function?.arguments
+                                                                if (name) func.name = name;
+                                                                if (args) func.arguments = args;
+                                                                if (id) func.id = id;
+                                                                if (func.id) toolCallsMap.set(func.id, func)
+                                                            }
+                                                        })
+                                                    }
+                                                }
+                                            })
+                                        } catch (e) {
+                                            throw e;
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                subscriber.error(e);
+                            }
+                        };
+                        // 绑定事件处理器
+                        stream.on("data", dataHandler);
+                        stream.on("end", onEnd);
+                        stream.on("error", (e: Error) => subscriber.error(e));
+                    })
+                    .catch((err: AxiosError) => {
+                        subscriber.error(err.response?.data || err.message);
+                    });
 
-        // 清理函数
-        return () => controller.abort();
-    });
+                // 清理函数
+                return () => controller.abort();
+            });
+        })
+    )
+
 }
 
 export function requestWithRule<T>(params: ChatCompletionParams, zod: ZodType<T>) {
@@ -267,7 +295,7 @@ export function request<T>(params: ChatCompletionParams, zod: ZodType<T>): Obser
                     ...val.messages,
                     ...params.messages
                 ],
-                response_format: { type: 'json_object' }
+                response_format: params.response_format || { type: 'json_object' }
             }, zod).pipe(
                 retry(3)
             )

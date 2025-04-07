@@ -1,4 +1,4 @@
-import logUpdate from 'log-update';
+import logUpdate from './logUpdate.js';
 import chalk from 'chalk';
 
 /**

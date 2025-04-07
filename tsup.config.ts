@@ -2,16 +2,13 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
     entry: ['src/demo.ts'],
-    format: ['esm', 'cjs'],
+    format: ['esm'],
     dts: true,
     clean: true,
     target: 'node14',
-    bundle: true,
+    shims: true,
+    cjsInterop: true,
     esbuildOptions(options) {
-        options.supported = {
-            // 启用 import 和 require 的互操作性
-            'dynamic-import': true,
-            'import-meta': true,
-        };
+        options.mainFields = ['module', 'main'];
     },
 });

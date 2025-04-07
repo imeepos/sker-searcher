@@ -1,11 +1,11 @@
-import "reflect-metadata"
-
 import { config } from 'dotenv'
 import { join } from "path";
-async function bootstrap() {
+import { bootstrap } from '@sker/gateway'
+async function main() {
     const root = process.cwd()
     config({
         path: join(root, '.env')
     })
+    await bootstrap(8089)
 }
-bootstrap()
+main()

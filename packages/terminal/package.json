@@ -17,6 +17,7 @@
     "cli-cursor": "^5.0.0",
     "slice-ansi": "^7.1.0",
     "strip-ansi": "^7.1.0",
+    "tsc": "^2.0.4",
     "wrap-ansi": "^9.0.0"
   }
 }

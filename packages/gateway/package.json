@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@sker/mq": "workspace:*"
+    "@sker/mq": "workspace:*",
+    "tsc": "^2.0.4"
   }
 }

@@ -113,6 +113,9 @@ importers:
       '@sker/tools':
         specifier: workspace:*
         version: link:../tools
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
 
   packages/axios:
     dependencies:
@@ -128,6 +131,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
       zod:
         specifier: ^3.24.2
         version: 3.24.2
@@ -146,12 +152,21 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
+      tsyringe:
+        specifier: ^4.9.1
+        version: 4.9.1
 
   packages/gateway:
     dependencies:
       '@sker/mq':
         specifier: workspace:*
         version: link:../mq
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
 
   packages/mq:
     dependencies:
@@ -170,6 +185,9 @@ importers:
       ioredis:
         specifier: ^5.6.0
         version: 5.6.0
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
       tsup:
         specifier: ^8.4.0
         version: 8.4.0(typescript@5.8.2)
@@ -179,13 +197,24 @@ importers:
       '@sker/orm':
         specifier: 'file:'
         version: 'link:'
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
       typeorm:
         specifier: ^0.3.21
         version: 0.3.21(ioredis@5.6.0)(pg@8.14.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@types/node@22.13.10)(typescript@5.8.2))
 
-  packages/redis: {}
+  packages/redis:
+    dependencies:
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
 
-  packages/sandbox: {}
+  packages/sandbox:
+    dependencies:
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
 
   packages/terminal:
     dependencies:
@@ -204,6 +233,9 @@ importers:
       strip-ansi:
         specifier: ^7.1.0
         version: 7.1.0
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
       wrap-ansi:
         specifier: ^9.0.0
         version: 9.0.0
@@ -222,6 +254,9 @@ importers:
       '@sker/tools':
         specifier: 'file:'
         version: file:packages/tools
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
 
 packages:
 
@@ -2554,9 +2589,16 @@ packages:
       '@swc/wasm':
         optional: true
 
+  tsc@2.0.4:
+    resolution: {integrity: sha512-fzoSieZI5KKJVBYGvwbVZs/J5za84f2lSTLPYf6AGiIf43tZ3GNrI1QzTLcjtyDDP4aLxd46RTZq1nQxe7+k5Q==}
+    hasBin: true
+
   tsconfig-paths@4.2.0:
     resolution: {integrity: sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg==}
     engines: {node: '>=6'}
+
+  tslib@1.14.1:
+    resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
@@ -2579,6 +2621,10 @@ packages:
         optional: true
       typescript:
         optional: true
+
+  tsyringe@4.9.1:
+    resolution: {integrity: sha512-dJCWk0RolAnGk0j839M0lcuS/PtNUPaMsnBosn+wg5N16xy0tofcVuvsidMs0JuRbaJ0wVIT7RsuHWbVIZ5Rcg==}
+    engines: {node: '>= 6.0.0'}
 
   tunnel-agent@0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
@@ -3672,6 +3718,7 @@ snapshots:
       '@sker/core': link:packages/core
       '@sker/orm': link:packages/orm
       '@sker/sandbox': link:packages/sandbox
+      tsc: 2.0.4
 
   '@sqltools/formatter@1.2.5': {}
 
@@ -5323,11 +5370,15 @@ snapshots:
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
 
+  tsc@2.0.4: {}
+
   tsconfig-paths@4.2.0:
     dependencies:
       json5: 2.2.3
       minimist: 1.2.8
       strip-bom: 3.0.0
+
+  tslib@1.14.1: {}
 
   tslib@2.8.1: {}
 
@@ -5356,6 +5407,10 @@ snapshots:
       - supports-color
       - tsx
       - yaml
+
+  tsyringe@4.9.1:
+    dependencies:
+      tslib: 1.14.1
 
   tunnel-agent@0.6.0:
     dependencies:

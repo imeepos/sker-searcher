@@ -253,7 +253,11 @@ export function requestWithRule<T>(params: ChatCompletionParams, zod: ZodType<T>
             try {
                 return zod.parse(val)
             } catch (e) {
+                if (val && (val as any).content) {
+                    return zod.parse((val as any).content)
+                }
                 console.error({ error: e, params: params, result: val })
+                throw e;
             }
         }),
     )

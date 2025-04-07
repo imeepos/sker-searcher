@@ -9,10 +9,11 @@
     "tsc": "tsup"
   },
   "dependencies": {
+    "@sker/axios": "workspace:*",
     "@sker/core": "workspace:*",
     "@sker/orm": "workspace:*",
     "@sker/tools": "workspace:*",
-    "@sker/axios": "workspace:*"
+    "tsc": "^2.0.4"
   },
   "keywords": [],
   "author": "",

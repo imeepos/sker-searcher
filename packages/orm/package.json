@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@sker/orm": "file:",
+    "tsc": "^2.0.4",
     "typeorm": "^0.3.21"
   }
 }

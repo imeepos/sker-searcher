@@ -1,11 +1,10 @@
 
-import { SiliconflowChatCompletionsTool } from '@sker/core'
 import { useQuery as _useQuery } from '@sker/orm'
 import { useSandbox } from '@sker/sandbox'
 const useQuery = async <T>(sql: string, parameters: any[]) => {
     return _useQuery<T>([], sql, parameters)
 }
-export async function useTools(): Promise<SiliconflowChatCompletionsTool[]> {
+export async function useTools(): Promise<any[]> {
     return [
         {
             type: 'function',

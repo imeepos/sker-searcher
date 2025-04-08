@@ -6,6 +6,9 @@ export abstract class Worker {
     private taskStore: TaskStore;
     private rabbitMQ: RabbitMQ;
 
+    name: string;
+    desc: string;
+
     constructor() {
         this.taskStore = new TaskStore(process.env.REDIS_URL || 'redis://localhost:6379');
         this.rabbitMQ = new RabbitMQ(process.env.RABBITMQ_URL || 'amqp://localhost');

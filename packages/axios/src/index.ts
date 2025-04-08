@@ -244,10 +244,12 @@ export function createStreamCompletion<T>(
 
 export function requestWithRule<T>(params: ChatCompletionParams, zod: ZodType<T>) {
     return createStreamCompletion<ChatCompletionParams>({
-        ...params, messages: [
-            { role: 'system', content: `根据用户的输入，生成结果\n<format>${JSON.stringify(zodToJsonSchema(zod))}<format/>\n请按照<format>的格式输出，并将输出结果放到content` },
+        ...params,
+        messages: [
+            { role: 'system', content: `根据用户的输入，生成结果\n<format>${JSON.stringify(zodToJsonSchema(zod))}<format/>\n请严格按照<format>的格式输出，并将输出结果放到content` },
             ...params.messages
-        ]
+        ],
+        response_format: { type: 'json_object' }
     }).pipe(
         map(val => {
             try {

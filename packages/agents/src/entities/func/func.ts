@@ -33,6 +33,7 @@ export class AiFunc {
                         e.id = item.id;
                     }
                     await m.save(AiFunc, e)
+                    return e;
                 }))
             })
         )

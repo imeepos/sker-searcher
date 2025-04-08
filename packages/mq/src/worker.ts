@@ -39,7 +39,7 @@ export abstract class Worker {
         console.log('Worker started and waiting for tasks...');
     }
 
-    abstract __processTask(task: Task): Promise<void>;
+    abstract __processTask<T = any>(task: Task): Promise<T>;
 
     private async processTask(task: Task): Promise<void> {
         // 获取最新状态
@@ -49,8 +49,8 @@ export abstract class Worker {
         if (currentTask.status === 'cancelled') {
             return;
         }
-        await this.__processTask(currentTask);
-        await this.finishTask(task.id);
+        const res = await this.__processTask(currentTask);
+        await this.finishTask(task.id, res);
     }
     // 更新进度
     public async udpateTaskProgress(id: string, progress: number) {
@@ -59,11 +59,11 @@ export abstract class Worker {
         });
     }
 
-    public async finishTask(id: string) {
+    public async finishTask(id: string, res: any) {
         await this.rabbitMQ.publishStatusUpdate(id, {
             status: 'success',
             progress: 100,
-            response: { result: 'Task completed successfully' },
+            response: res,
         });
     }
 

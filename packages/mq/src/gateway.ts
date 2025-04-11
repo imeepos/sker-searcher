@@ -63,6 +63,17 @@ export class Gateway {
                     res.status(404).json({ error: 'Task not found' });
                     return;
                 }
+                const query = req.query
+                const format = query.format as string;
+                if (format && format === 'md') {
+                    const response = task.response
+                    if (response) {
+                        if (typeof response === 'string') {
+                            res.type('markdown').send(response)
+                            return;
+                        }
+                    }
+                }
                 res.json({
                     id: task.id,
                     status: task.status,

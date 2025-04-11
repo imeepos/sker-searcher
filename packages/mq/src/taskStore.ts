@@ -44,8 +44,9 @@ export class TaskStore {
 
     async cancelTask(id: string): Promise<boolean> {
         const task = await this.getTask(id);
-        if (!task || task.status !== 'waiting') return false;
-
+        if (!task) {
+            return false
+        };
         await this.updateTask(id, { status: 'cancelled' });
         return true;
     }

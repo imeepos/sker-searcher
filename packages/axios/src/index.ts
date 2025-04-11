@@ -1,5 +1,5 @@
 
-import { from, map, Observable, retry, switchMap } from "rxjs";
+import { from, map, Observable, retry, switchMap, throwError } from "rxjs";
 import axios, { AxiosError } from "axios";
 import { z, ZodType } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
@@ -12,7 +12,7 @@ export type MODELS =
     | `Pro/deepseek-ai/DeepSeek-R1`
     | `Pro/deepseek-ai/DeepSeek-V3`;
 // 类型定义
-interface ChatMessage {
+export interface ChatMessage {
     role: "user" | "assistant" | "system";
     content: string;
 }
@@ -102,6 +102,12 @@ function getMaxTokens(model: MODELS) {
             return 512
     }
 }
+
+let logStyle: 'simple' | 'stream' = 'simple'
+export function setLogStyle(style: 'simple' | 'stream') {
+    logStyle = style;
+}
+
 // 核心流式处理函数
 export function createStreamCompletion<T>(
     params: ChatCompletionParams
@@ -125,25 +131,23 @@ export function createStreamCompletion<T>(
                 let reasoning_content = Buffer.from(``)
                 let content = Buffer.from(``)
                 params.name = params.name || randomUUID()
+                const response_format = params.response_format || { type: 'text' }
                 const toolCallsMap: Map<string, any> = new Map()
                 const onEnd = () => {
                     try {
-                        const response_format = params.response_format
-                        if (response_format) {
-                            if (response_format.type === 'text') {
-                                subscriber.next(content.toString('utf-8') as T)
-                            }
-                            if (response_format.type === 'json_object') {
+                        if (response_format.type === 'text') {
+                            subscriber.next(content.toString('utf-8') as T)
+                        }
+                        if (response_format.type === 'json_object') {
+                            try {
+                                const item = JSON.parse(reasoning_content.toString('utf-8'))
+                                subscriber.next(item)
+                            } catch (e) {
                                 try {
-                                    const item = JSON.parse(reasoning_content.toString('utf-8'))
+                                    const item = JSON.parse(content.toString('utf-8'))
                                     subscriber.next(item)
                                 } catch (e) {
-                                    try {
-                                        const item = JSON.parse(content.toString('utf-8'))
-                                        subscriber.next(item)
-                                    } catch (e) {
-                                        subscriber.next(reasoning_content.toString('utf-8') as T)
-                                    }
+                                    subscriber.next(reasoning_content.toString('utf-8') as T)
                                 }
                             }
                         }
@@ -159,16 +163,17 @@ export function createStreamCompletion<T>(
                     completion_tokens: 0,
                     name: params.name || ``
                 }
+                const data = {
+                    ...params,
+                    stream: true,
+                    max_tokens: getMaxTokens(params.model || 'Qwen/QwQ-32B'),
+                    // tools: tools
+                }
                 streamClient
                     .request({
                         url: `/chat/completions`,
                         method: 'post',
-                        data: {
-                            ...params,
-                            stream: true,
-                            max_tokens: getMaxTokens(params.model || 'Qwen/QwQ-32B'),
-                            tools: tools
-                        },
+                        data: data,
                         signal: controller.signal,
                     })
                     .then((response) => {
@@ -186,21 +191,28 @@ export function createStreamCompletion<T>(
                                         }
                                         try {
                                             const json: StreamResponse = JSON.parse(data);
-                                            display.updateAgent({
-                                                ...agent,
-                                                ...json.usage
-                                            })
+                                            if (logStyle === 'simple') {
+                                                display.updateAgent({
+                                                    ...agent,
+                                                    ...json.usage
+                                                })
+                                            }
                                             json.choices.map(choice => {
                                                 const delta = choice.delta
                                                 if (delta) {
                                                     if (delta.reasoning_content) {
                                                         reasoning_content = Buffer.concat([reasoning_content, Buffer.from(delta.reasoning_content)])
+                                                        if (logStyle === 'stream') {
+                                                            process.stdout.write(delta.reasoning_content)
+                                                        }
                                                     }
                                                     if (delta.content) {
                                                         content = Buffer.concat([content, Buffer.from(delta.content)])
+                                                        if (logStyle === 'stream') {
+                                                            process.stdout.write(delta.content)
+                                                        }
                                                     }
                                                     if (delta.tool_calls) {
-                                                        console.log(delta)
                                                         delta.tool_calls.map(tool => {
                                                             if (tool.id) {
                                                                 const func = toolCallsMap.get(tool.id) || {}
@@ -231,7 +243,7 @@ export function createStreamCompletion<T>(
                         stream.on("error", (e: Error) => subscriber.error(e));
                     })
                     .catch((err: AxiosError) => {
-                        subscriber.error(err.response?.data || err.message);
+                        subscriber.error(new Error(`status is: ${err.status}, error msg is : ${err.message} data is : ${JSON.stringify(data)}`))
                     });
 
                 // 清理函数
@@ -243,25 +255,35 @@ export function createStreamCompletion<T>(
 }
 
 export function requestWithRule<T>(params: ChatCompletionParams, zod: ZodType<T>) {
+    const rule = z.union([zod, z.array(zod)])
     return createStreamCompletion<ChatCompletionParams>({
         ...params,
         messages: [
-            { role: 'system', content: `根据用户的输入，生成结果\n<format>${JSON.stringify(zodToJsonSchema(zod))}<format/>\n请严格按照<format>的格式输出，并将输出结果放到content` },
-            ...params.messages
+            ...params.messages,
+            { role: 'user', content: `请严格按照以下JSON Schema的格式和约束生成数据，并输出一个完全符合该Schema的JSON对象。要求如下：1. **Schema定义**：\n ${JSON.stringify(zodToJsonSchema(zod))}\n 生成要求： * 必须完全遵守Schema中的字段类型、格式和约束条件（如minimum、format等） \n * 仅包含Schema中定义的字段，禁止添加额外字段（因additionalProperties: false）\n * 为缺失的字段填充合理的默认值（如is_active默认为true）\n 生成的数据需真实、合理（例如email需符合邮箱格式）。 \n并将结果放到content` },
         ],
         response_format: { type: 'json_object' }
     }).pipe(
         map(val => {
             try {
-                return zod.parse(val)
-            } catch (e) {
-                if (val && (val as any).content) {
-                    return zod.parse((val as any).content)
+                try {
+                    return rule.parse(val)
+                } catch (e) {
+                    if (val && (val as any).content) {
+                        return rule.parse((val as any).content)
+                    }
+                    throw e;
                 }
-                console.error({ error: e, params: params, result: val })
+            } catch (e) {
                 throw e;
             }
         }),
+        map(val => {
+            if (Array.isArray(val) && val.length === 1) {
+                return val[0] as T;
+            }
+            return val as T;
+        })
     )
 }
 
@@ -302,9 +324,7 @@ export function request<T>(params: ChatCompletionParams, zod: ZodType<T>): Obser
                     ...params.messages
                 ],
                 response_format: params.response_format || { type: 'json_object' }
-            }, zod).pipe(
-                retry(3)
-            )
+            }, zod)
         })
     )
 }

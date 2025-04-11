@@ -3,7 +3,7 @@ import { Column, Entity, PrimaryGeneratedColumn, useEntityManager, useEntityMana
 import { z } from "zod";
 export const AiProjectRule = z.object({
     name: z.optional(z.string({ description: '项目名，要简洁易记且能体现该项目的核心亮点功能' })),
-    content: z.string({ description: '架构文档，markdown格式，要求简洁明了' }),
+    content: z.string({ description: '详细介绍，markdown格式' }),
     desc: z.string({ description: '简单介绍，简洁明了的说明此项目的用途及场景' })
 })
 @Entity({
@@ -11,7 +11,7 @@ export const AiProjectRule = z.object({
 })
 export class AiProject {
 
-    async create(question: string) {
+    static create(question: string) {
         return from(useEntityManager([AiProject], async m => {
             return m.find(AiProject)
         })).pipe(
@@ -20,7 +20,7 @@ export class AiProject {
                     model: 'Pro/deepseek-ai/DeepSeek-V3',
                     messages: [
                         {
-                            role: 'system', content: `根据用户的需求，设计可靠、灵活的系统架构，确保软件在满足当前需求的同时，具备应对未来变化的生命力`
+                            role: 'system', content: `根据用户的需求，生成项目信息，包含 项目名，详细介绍，简单介绍`
                         },
                         {
                             role: 'system',

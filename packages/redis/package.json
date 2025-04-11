@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "redis": "^4.7.0",
     "tsc": "^2.0.4"
   }
 }

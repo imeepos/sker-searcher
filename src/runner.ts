@@ -1,5 +1,5 @@
 import "reflect-metadata"
-import { request } from "@sker/axios";
+import { request, retry, setLogStyle } from "@sker/axios";
 import { config } from 'dotenv'
 import { join } from "path"
 import { writeFileSync } from "fs";
@@ -9,14 +9,17 @@ async function bootstrap() {
     config({
         path: join(root, '.env')
     })
+    setLogStyle('stream')
     request({
         model: 'Pro/deepseek-ai/DeepSeek-R1',
         messages: [
-            { role: 'user', content: `设计一个任务调度智能体，根据用户的输入选择合适的智能体` }
+            { role: 'user', content: `设计一个 Docker方向的运维工程师 智能体提示词` }
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.7
-    }, GeneraterTemplate).subscribe({
+        temperature: 0.3
+    }, GeneraterTemplate).pipe(
+        retry(3)
+    ).subscribe({
         next(value: any) {
             console.log(`\n---------------\n`)
             /**

@@ -31,7 +31,7 @@ export interface TerminalLayout {
  * 多区域终端显示器类
  */
 export class MultiTerminalDisplay {
-    private agents: Map<string, AgentStatus>;
+    private agents: Map<Date, AgentStatus>;
     private layout: TerminalLayout;
     private timer?: NodeJS.Timeout;
 
@@ -49,7 +49,7 @@ export class MultiTerminalDisplay {
      * @param agent 智能体状态
      */
     updateAgent(agent: AgentStatus): void {
-        this.agents.set(agent.name, {
+        this.agents.set(agent.createDate, {
             ...agent,
         });
         this.render();
@@ -59,8 +59,8 @@ export class MultiTerminalDisplay {
      * 移除智能体
      * @param name 智能体名称
      */
-    removeAgent(name: string): void {
-        this.agents.delete(name);
+    removeAgent(createDate: Date): void {
+        this.agents.delete(createDate);
         this.render();
     }
 
@@ -135,7 +135,7 @@ export class MultiTerminalDisplay {
         // 精确计算各部分宽度
         const innerWidth = width - 2; // 减去边框
         const timeWidth = timeText.length + 1; // 时间文本宽度加一个空格
-        const titleMaxWidth = innerWidth - timeWidth - 2;
+        const titleMaxWidth = innerWidth - timeWidth - 6;
 
         // 处理标题文本
         const title = agent.name.length > titleMaxWidth

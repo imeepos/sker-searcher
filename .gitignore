@@ -1,6 +1,6 @@
 output/*
 outputs/*
-
+tests
 # Logs
 logs
 *.log

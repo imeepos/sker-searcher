@@ -1,12 +1,11 @@
 import "reflect-metadata"
 import { config } from 'dotenv'
 import { join } from "path";
-import { BaseAgent, PlanningReActAgent, RedisPlanningFlow, AiAgent } from '@sker/agents'
+import { BaseAgent } from '@sker/agents'
 import { createStreamCompletion, setLogStyle, requestWithRule, retry, switchMap, from } from '@sker/axios'
 import { TaskRule } from "./flow/planning.js";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 import { writeFile } from "fs/promises";
-import { SYSTEM_PROMPT, CHECK_PROMPTS } from './资深前端架构师.js'
 
 export interface VerifyResult {
     success: boolean;
@@ -101,7 +100,6 @@ async function main() {
     setLogStyle('stream')
     // AiProject.create(`一款专注于主播打点标注的桌面端软件`).subscribe()
 
-
     // const plan = new PlanningReActAgent()
     // plan.plan(1)
 
@@ -113,16 +111,48 @@ async function main() {
     //         writeFileSync(join(root, 'output', 'demo.md'), typeof value === 'string' ? value : JSON.stringify(value))
     //     },
     // })
-    const system = `作为:${SYSTEM_PROMPT.join('\n')}`
-    const input = readFileSync(join(root, 'tests/001/input.md'), 'utf-8')
+    // const system = `作为:${SYSTEM_PROMPT_MONORPO.join('\n')}`
+    // const input = readFileSync(join(root, 'tests/001/input.md'), 'utf-8')
+    // createStreamCompletion({
+    //     model: 'Pro/deepseek-ai/DeepSeek-V3',
+    //     messages: [{ role: 'system', content: system }, { role: 'user', content: input }],
+    //     temperature: 0
+    // }).pipe(
+    //     switchMap(r => {
+    //         return from(writeFile(join(root, 'tests/001/output.md'), r as string))
+    //     })
+    // ).subscribe()
+
+
     createStreamCompletion({
-        model: 'Pro/deepseek-ai/DeepSeek-V3',
-        messages: [{ role: 'system', content: system }, { role: 'user', content: input }],
+        model: 'Pro/deepseek-ai/DeepSeek-R1',
+        messages: [{role: 'system', content: 'markerdown文档编写助手，将所有的用户输入整理成markdown格式'}, {role: 'user', content: readFileSync(join(root, 'src', 'memory/index.ts'), 'utf-8')}],
         temperature: 0
     }).pipe(
         switchMap(r => {
-            return from(writeFile(join(root, 'tests/001/output.md'), r as string))
+            return from(writeFile(join(root, 'tests/001/output_01.md'), r as string))
         })
     ).subscribe()
+
+
+    /**
+     * ‌环境感知
+     * 决策机制
+     * 行动执行
+     * ‌衡量标准
+     * 记忆系统
+     * 1. 短期记忆（上下文缓存）与长期记忆
+     * 2. 热数据层
+     * 3. 温数据层
+     * 4. 冷数据层
+     * 5. 采用双写入机制保证记忆更新原子性（先写入日志再更新主库）‌
+     * 6. 通过强化学习动态评估记忆价值，淘汰低效用数据（如三个月未调用的记忆片段）‌
+     * 学习能力
+     * 1. 通过强化学习、持续交互优化决策策略
+     * 规划与工具整合
+     * 1. 子任务拆分与动态调整
+     * 2. 外部工具扩展
+     */
+
 }
 main()

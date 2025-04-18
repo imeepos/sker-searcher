@@ -14,6 +14,7 @@
     "runner": "pnpm run -w tsc && node dist/runner.js",
     "docs": "ts-node -r tsconfig-paths/register src/docs.ts",
     "demo": "pnpm run -w tsc && node dist/demo.js",
+    "ai": "pnpm run -w tsc && node dist/ai.js",
     "tsc": "tsup"
   },
   "keywords": [],
@@ -42,13 +43,17 @@
     "dotenv": "^16.4.7",
     "esm": "^3.2.25",
     "fs-extra": "^11.3.0",
+    "gpt-tokenizer": "^2.9.0",
     "log-update": "^6.1.0",
     "pg": "^8.14.1",
+    "redis": "^4.7.0",
     "reflect-metadata": "^0.2.2",
     "require-resolve": "^0.0.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "tsup": "^8.4.0",
+    "uuid": "^11.1.0",
+    "vm2": "^3.9.19",
     "zod": "^3.24.2",
     "zod-to-json-schema": "^3.24.5"
   }

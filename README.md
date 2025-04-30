@@ -1,2 +1,0 @@
-# sker-searcher
-

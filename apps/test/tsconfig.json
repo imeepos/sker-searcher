@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "strict": true,
+        "skipLibCheck": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "sourceMap": true,
+        "lib": [
+            "ESNext"
+        ],
+        "types": [
+            "node"
+        ],
+        "baseUrl": "./",
+        "resolveJsonModule": true,
+        "paths": {}
+    }
+}

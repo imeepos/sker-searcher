@@ -1,0 +1,9 @@
+{
+    "name": "@sker/typescript-config",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+    },
+    "license": "MIT"
+}
